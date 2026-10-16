@@ -1,5 +1,6 @@
 # Передача работы
 
-Работа завершена. Windows dev-сборка с готовым OpenSSL из MSYS2 UCRT64 и
-кэшем пакета проверена в GitHub Actions. Последний проверенный выпуск и
-требования к запуску указаны в `docs/STATUS.md` и `docs/DEV-ARTIFACTS.md`.
+В работе перевод macOS dev-сборок на готовые пакеты OpenSSL 3 из conda-forge.
+План записан в `docs/PLAN.md`; дальше изменить workflow, проверить обе
+архитектуры и новый Release. Последний проверенный выпуск указан в
+`docs/STATUS.md`.
