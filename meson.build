@@ -50,10 +50,6 @@ if not libcrypto.found()
   libcrypto = dependency('libcrypto3', version: '>= 3.0.7', required: true)
 endif
 provider_path = libcrypto.get_variable(pkgconfig: 'modulesdir')
-libssl = dependency('libssl', version: '>= 3.0.7', required: false)
-if not libssl.found()
-  libssl = dependency('libssl3', version: '>= 3.0.7', required: true, method: 'pkg-config')
-endif
 
 # Set build version and build info definitions
 conf.set_quoted('P11PROV_VERSION', meson.project_version())
@@ -62,19 +58,6 @@ if build_info == ''
   build_info = 'Built with OpenSSL version ' + libcrypto.version()
 endif
 conf.set_quoted('P11PROV_BUILDINFO', build_info)
-
-host_system = host_machine.system()
-if host_system == 'windows'
-  shlext = '.dll'
-elif host_system == 'darwin'
-  # On macOS, loadable modules typically use .so as filename extension, but
-  # both NSS softokn and OpenSSL providers ignore this rule and use .dylib for
-  # loadable modules anyway. Note that p11-kit correctly uses .so, though, so
-  # be careful when using this variable, as it might not be correct on macOS.
-  shlext = '.dylib'
-else
-  shlext = '.so'
-endif
 
 if host_machine.endian() == 'big'
   conf.set('WORDS_BIGENDIAN', 1)
@@ -118,8 +101,6 @@ foreach f : functions
 endforeach
 
 configure_file(output: 'config.h', configuration: conf)
-
-meson.add_dist_script('scripts/clean-dist.sh')
 
 subdir('src')
 subdir('docs')

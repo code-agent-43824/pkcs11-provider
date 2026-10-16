@@ -15,8 +15,7 @@ jobs:
       - name: Install Dependencies
         run: |
             dnf -y install git gcc meson awk pkgconf-pkg-config \
-                file openssl-devel openssl \
-                nss-softokn nss-tools nss-softokn-devel
+                file openssl-devel openssl
       - name: Checkout Repository
         uses: actions/checkout@v6
       - name: Setup

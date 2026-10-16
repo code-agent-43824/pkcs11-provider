@@ -12,13 +12,3 @@ Usage:
     python uri2pem.py --verify --out mykey.pem 'pkcs11:token=MyToken;object=MyObject;type=private'
 
 The tool doesn't validate the argument for a valid PKCS#11 URI
-
-## Tests
-
-Requires: pytest
-
-To run the tests for `uri2pem.py`,
-first run `make check` to create the test NSS softoken.
-Then in  `tools/`, run `pytest tests`.
-
-The test suite enables `pkcs11-module-encode-provider-uri-to-pem = true`.

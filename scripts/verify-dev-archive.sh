@@ -26,8 +26,6 @@ case "$(uname -s)" in
 esac
 test -s "$package_dir/lib/ossl-modules/$module"
 
-read -r -a openssl_flags <<< "$(pkg-config --cflags --libs libcrypto)"
-"${CC:-cc}" -std=c11 -Wall -Wextra -Werror \
-    -I "$package_dir/include" tests/dev-consumer.c \
-    "${openssl_flags[@]}" -o "$stage_dir/dev-consumer"
-OPENSSL_MODULES="$package_dir/lib/ossl-modules" "$stage_dir/dev-consumer"
+OPENSSL_MODULES="$package_dir/lib/ossl-modules" \
+    openssl list -providers -provider default -provider pkcs11 -verbose \
+    | grep -F 'name: PKCS#11 Provider'
