@@ -22,6 +22,7 @@ test -d "$package_dir/LICENSES"
 case "$(uname -s)" in
     Linux) module=pkcs11.so ;;
     Darwin) module=pkcs11.dylib ;;
+    *NT*) module=pkcs11.dll ;;
     *) echo "Unsupported host platform" >&2; exit 2 ;;
 esac
 test -s "$package_dir/lib/ossl-modules/$module"

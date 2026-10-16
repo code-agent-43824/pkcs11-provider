@@ -12,8 +12,9 @@ actionlint и REUSE прошли; GitHub Actions подтвердил Address Sa
 Shellcheck, REUSE и csbuild. `imported-softokn`, остальные сценарии с токенами
 и сквозные тесты удалены по решению владельца.
 
-Нативная сборка Windows не заявлена: загрузчик драйвера в `src/interface.c`
-использует POSIX `dlopen`/`dlsym`. Точные цели задаёт
+В текущем изменении добавлена Windows UCRT64 цель с пакетным OpenSSL из MSYS2,
+но GitHub Actions и публикация её архива ещё не проверены. Последний
+проверенный выпуск остаётся № 7. Точные цели задаёт
 `.github/workflows/dev-release.yml`.
 
 Коммиты форка после `e5ff476` в `main` имеют автора и коммиттера

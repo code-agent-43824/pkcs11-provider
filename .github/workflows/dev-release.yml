@@ -35,6 +35,8 @@ jobs:
             target: macos-arm64-15
           - runner: macos-15-intel
             target: macos-x86_64-15
+          - runner: windows-2025
+            target: windows-x86_64-ucrt64
     steps:
       - uses: actions/checkout@v6
 
@@ -52,7 +54,61 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> "$GITHUB_ENV"
 
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-p11-kit
+
+      - name: Check current MSYS2 OpenSSL version
+        if: runner.os == 'Windows'
+        id: msys2-openssl
+        shell: msys2 {0}
+        run: |
+          pacman -Sy --noconfirm
+          package=mingw-w64-ucrt-x86_64-openssl
+          version=$(pacman -Si "$package" | sed -n 's/^Version *: *//p')
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "MSYS2_OPENSSL_PACKAGE=$package $version" >> "$GITHUB_ENV"
+
+      - uses: actions/cache/restore@v4
+        if: runner.os == 'Windows'
+        id: openssl-cache
+        with:
+          path: .cache/msys2-openssl
+          key: msys2-ucrt64-openssl-${{ steps.msys2-openssl.outputs.version }}
+
+      - name: Install prebuilt MSYS2 OpenSSL
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          package=mingw-w64-ucrt-x86_64-openssl
+          version='${{ steps.msys2-openssl.outputs.version }}'
+          if [ -d .cache/msys2-openssl ]; then
+            cp .cache/msys2-openssl/* /var/cache/pacman/pkg/
+          fi
+          pacman -S --needed --noconfirm "$package"
+          test "$(pacman -Q "$package" | cut -d ' ' -f 2)" = "$version"
+          mkdir -p .cache/msys2-openssl
+          cp "/var/cache/pacman/pkg/$package-$version-any.pkg.tar.zst" \
+            .cache/msys2-openssl/
+
+      - uses: actions/cache/save@v4
+        if: runner.os == 'Windows' && steps.openssl-cache.outputs.cache-hit != 'true'
+        with:
+          path: .cache/msys2-openssl
+          key: msys2-ucrt64-openssl-${{ steps.msys2-openssl.outputs.version }}
+
       - name: Build and test
+        if: runner.os != 'Windows'
         run: |
           pkg-config --exists p11-kit-1
           PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
@@ -68,13 +124,45 @@ jobs:
           OPENSSL_MODULES="$PWD/builddir/src" \
             openssl list -providers -provider default -provider pkcs11 -verbose \
             | grep -F 'name: PKCS#11 Provider'
+          if [ "$RUNNER_OS" = 'macOS' ]; then
+            otool -L builddir/src/pkcs11.dylib
+          fi
+
+      - name: Build and test on Windows
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          pkg-config --exists p11-kit-1
+          PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          test -f "$PKCS11_PROVIDER_MODULE"
+          export PKCS11_PROVIDER_MODULE
+          meson setup builddir -Dbuildtype=debug
+          meson compile -C builddir pkcs11
+          meson test -C builddir --suite unittests --print-errorlogs
+          OPENSSL_MODULES="$PWD/builddir/src" \
+            openssl list -providers -provider default -provider pkcs11 -verbose \
+            | grep -F 'name: PKCS#11 Provider'
+          objdump -p builddir/src/pkcs11.dll | grep -F 'OSSL_provider_init'
 
       - name: Package and verify archive
+        if: runner.os != 'Windows'
         run: |
           scripts/package-dev.sh builddir '${{ matrix.target }}' dist
           package="pkcs11-provider-dev-${{ matrix.target }}"
           archive="dist/$package.tar.gz"
           scripts/verify-dev-archive.sh "$archive" '${{ matrix.target }}'
+
+      - name: Package and verify Windows archive
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          export PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          scripts/package-dev.sh builddir '${{ matrix.target }}' dist
+          scripts/verify-dev-archive.sh \
+            'dist/pkcs11-provider-dev-${{ matrix.target }}.tar.gz' \
+            '${{ matrix.target }}'
 
       - uses: actions/upload-artifact@v7
         with:
@@ -102,7 +190,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 4
+          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 5
           (cd dist && sha256sum *.tar.gz > SHA256SUMS)
           tag="pkcs11-provider-dev-build-${GITHUB_RUN_NUMBER}"
           if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then

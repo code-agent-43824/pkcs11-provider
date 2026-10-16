@@ -3,8 +3,47 @@
    SPDX-License-Identifier: Apache-2.0 */
 
 #include "provider.h"
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 #include <string.h>
+
+#ifdef _WIN32
+static void *p11prov_module_open(const char *path)
+{
+    return LoadLibraryA(path);
+}
+
+static void *p11prov_module_symbol(void *handle, const char *name)
+{
+    return (void *)GetProcAddress((HMODULE)handle, name);
+}
+
+static void p11prov_module_close(void *handle)
+{
+    FreeLibrary((HMODULE)handle);
+}
+
+static void p11prov_module_clear_error(void)
+{
+    SetLastError(0);
+}
+
+static const char *p11prov_module_error(void)
+{
+    static char message[64];
+    snprintf(message, sizeof(message), "Windows error %lu", GetLastError());
+    return message;
+}
+#else
+#define p11prov_module_open(path) dlopen(path, P11PROV_DLOPEN_FLAGS)
+#define p11prov_module_symbol(handle, name) dlsym(handle, name)
+#define p11prov_module_close(handle) dlclose(handle)
+#define p11prov_module_clear_error() dlerror()
+#define p11prov_module_error() dlerror()
+#endif
 
 /* Wrapper Interface on top of PKCS#11 interfaces.
  * This allows us to support multiple versions of PKCS#11 drivers
@@ -217,9 +256,9 @@ static CK_RV p11prov_interface_init(P11PROV_MODULE *mctx)
         return CKR_HOST_MEMORY;
     }
 
-    intf->GetInterface = dlsym(mctx->dlhandle, "C_GetInterface");
+    intf->GetInterface = p11prov_module_symbol(mctx->dlhandle, "C_GetInterface");
     if (!intf->GetInterface) {
-        char *err = dlerror();
+        const char *err = p11prov_module_error();
         P11PROV_debug(
             "C_GetInterface() not available. Falling back to "
             "C_GetFunctionList(): %s",
@@ -239,7 +278,8 @@ static CK_RV p11prov_interface_init(P11PROV_MODULE *mctx)
             .flags = 0,
         };
 
-        intf->GetFunctionList = dlsym(mctx->dlhandle, "C_GetFunctionList");
+        intf->GetFunctionList =
+            p11prov_module_symbol(mctx->dlhandle, "C_GetFunctionList");
         if (intf->GetFunctionList) {
             ret = intf->GetFunctionList(
                 (CK_FUNCTION_LIST_PTR_PTR)&deflt.pFunctionList);
@@ -247,8 +287,8 @@ static CK_RV p11prov_interface_init(P11PROV_MODULE *mctx)
                 ck_interface = &deflt;
             }
         } else {
-            char *err = dlerror();
-            P11PROV_debug("dlsym() failed: %s", err);
+            const char *err = p11prov_module_error();
+            P11PROV_debug("Symbol lookup failed: %s", err);
             ret = CKR_GENERAL_ERROR;
         }
     }
@@ -307,7 +347,7 @@ CK_RV p11prov_module_new(P11PROV_CTX *ctx, const char *path,
     return CKR_OK;
 }
 
-#if !defined(RTLD_DEEPBIND)
+#if !defined(_WIN32) && !defined(RTLD_DEEPBIND)
 #define RTLD_DEEPBIND 0
 #endif
 
@@ -331,13 +371,13 @@ CK_RV p11prov_module_init(P11PROV_CTX *ctx)
 
     P11PROV_debug("PKCS#11: Initializing the module: %s", mctx->path);
 
-    dlerror();
+    p11prov_module_clear_error();
 
-    mctx->dlhandle = dlopen(mctx->path, P11PROV_DLOPEN_FLAGS);
+    mctx->dlhandle = p11prov_module_open(mctx->path);
     if (!mctx->dlhandle) {
-        char *err = dlerror();
+        const char *err = p11prov_module_error();
         ret = CKR_GENERAL_ERROR;
-        P11PROV_debug("dlopen(%s) failed: %s", mctx->path, err);
+        P11PROV_debug("Loading %s failed: %s", mctx->path, err);
         goto done;
     }
 
@@ -401,7 +441,7 @@ void p11prov_module_free(P11PROV_MODULE *mctx)
 
     if (mctx->dlhandle) {
         p11prov_Finalize(mctx->provctx, NULL);
-        dlclose(mctx->dlhandle);
+        p11prov_module_close(mctx->dlhandle);
     }
     OPENSSL_free(mctx->interface);
     OPENSSL_free(mctx->path);

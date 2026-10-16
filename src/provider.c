@@ -105,6 +105,7 @@ static struct p11prov_context_pool {
     .rwlock = PTHREAD_RWLOCK_INITIALIZER,
 };
 
+#ifndef _WIN32
 static void fork_prepare(void)
 {
     int err;
@@ -171,6 +172,7 @@ static void fork_child(void)
         P11PROV_debug("Failed to release context pool (errno:%d)", err);
     }
 }
+#endif
 
 #define CTX_POOL_ALLOC 4
 static void context_add_pool(struct p11prov_ctx *ctx)
@@ -194,12 +196,14 @@ static void context_add_pool(struct p11prov_ctx *ctx)
             P11PROV_raise(ctx, CKR_HOST_MEMORY, "Failed to alloc ctx pool");
             goto done;
         }
+#ifndef _WIN32
         err = pthread_atfork(fork_prepare, fork_parent, fork_child);
         if (err != 0) {
             /* just warn, nothing much we can do */
             P11PROV_raise(ctx, CKR_GENERAL_ERROR,
                           "Failed to register fork handlers (error:%d)", err);
         }
+#endif
     } else {
         if (ctx_pool.num % CTX_POOL_ALLOC == 0) {
             P11PROV_CTX **tmp;
@@ -1322,6 +1326,9 @@ static struct p11prov_cfg_names {
     { "pkcs11-max-pin-length" },
 };
 
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 int OSSL_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL_DISPATCH *in,
                        const OSSL_DISPATCH **out, void **provctx)
 {

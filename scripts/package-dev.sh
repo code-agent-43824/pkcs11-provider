@@ -13,6 +13,7 @@ output_dir=$3
 case "$(uname -s)" in
     Linux) module=pkcs11.so ;;
     Darwin) module=pkcs11.dylib ;;
+    *NT*) module=pkcs11.dll ;;
     *) echo "Unsupported host platform" >&2; exit 2 ;;
 esac
 
@@ -43,10 +44,15 @@ OpenSSL: $(openssl version -v)
 Build type: debug, unstripped
 EOF
 
+if [ -n "${MSYS2_OPENSSL_PACKAGE:-}" ]; then
+    printf 'MSYS2 OpenSSL package: %s\n' "$MSYS2_OPENSSL_PACKAGE" \
+        >> "$package_dir/BUILD-INFO.txt"
+fi
+
 cat > "$package_dir/README.md" <<'EOF'
 # Dev-архив pkcs11-provider
 
-`lib/ossl-modules/pkcs11.so` (macOS: `pkcs11.dylib`) — готовый модуль
+`lib/ossl-modules/pkcs11.so` (macOS: `pkcs11.dylib`, Windows: `pkcs11.dll`) — готовый модуль
 провайдера для OpenSSL 3. Укажите каталог модуля в `OPENSSL_MODULES` и
 загружайте провайдер по имени `pkcs11`. Отдельной библиотеки для линковки нет.
 
@@ -56,6 +62,11 @@ cat > "$package_dir/README.md" <<'EOF'
 
 Версия OpenSSL сборочного агента указана в `BUILD-INFO.txt`. Бинарный модуль
 зависит от совместимой библиотеки OpenSSL и драйвера PKCS #11 на целевой машине.
+Windows DLL OpenSSL в архив не входят: установите OpenSSL 3 для MSYS2 UCRT64
+той же архитектуры и сделайте его DLL доступными приложению. Windows-модуль
+также использует runtime `libwinpthread-1.dll` из MSYS2 UCRT64.
+На macOS требуется отдельный OpenSSL 3 из Homebrew `openssl@3`; системная
+криптобиблиотека macOS не является заменой OpenSSL 3.
 EOF
 
 archive="$output_dir/$package.tar.gz"
