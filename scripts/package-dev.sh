@@ -63,6 +63,10 @@ if [ -n "${CONDA_OPENSSL_PREFIX:-}" ]; then
     cat "$CONDA_OPENSSL_PREFIX/package-source.txt" \
         >> "$package_dir/BUILD-INFO.txt"
 fi
+if [ "$module" = pkcs11.dylib ]; then
+    printf 'Minimum macOS: %s\n' "${MACOSX_DEPLOYMENT_TARGET:?}" \
+        >> "$package_dir/BUILD-INFO.txt"
+fi
 
 cat > "$package_dir/README.md" <<'EOF'
 # Dev-архив pkcs11-provider
@@ -85,6 +89,7 @@ Windows DLL OpenSSL в архив не входят: установите OpenSS
 и, если приложению нужен TLS, `libssl.3.dylib` той же архитектуры через
 `@rpath`. Модуль ищет их также на уровень выше `ossl-modules`, в каталоге
 `lib` архива. Приложение и провайдер должны использовать одну копию libcrypto.
+Минимальная версия macOS для модуля указана в `BUILD-INFO.txt`.
 EOF
 
 archive="$output_dir/$package.tar.gz"

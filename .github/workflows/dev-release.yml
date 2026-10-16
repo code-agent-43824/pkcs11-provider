@@ -59,6 +59,7 @@ jobs:
           prefix="$RUNNER_TEMP/conda-openssl"
           scripts/install-conda-openssl.sh '${{ matrix.target }}' "$prefix"
           echo "CONDA_OPENSSL_PREFIX=$prefix" >> "$GITHUB_ENV"
+          echo 'MACOSX_DEPLOYMENT_TARGET=11.0' >> "$GITHUB_ENV"
           echo "$prefix/bin" >> "$GITHUB_PATH"
           echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$(brew --prefix p11-kit)/lib/pkgconfig" >> "$GITHUB_ENV"
 

@@ -47,7 +47,9 @@ Windows-архив содержит `pkcs11.dll` и `pkcs11.h`, без DLL OpenS
 Для macOS workflow скачивает готовые пакеты OpenSSL 3 из conda-forge для
 `osx-arm64` и `osx-64` и сверяет их SHA-256, закреплённые в
 `scripts/install-conda-openssl.sh`. Источник конкретной сборки записан в
-`BUILD-INFO.txt`. Модуль ссылается на `@rpath/libcrypto.3.dylib`; пути
+`BUILD-INFO.txt`. Суффикс `-15` в имени macOS архива обозначает runner
+GitHub Actions; минимальную версию macOS для модуля указывает `BUILD-INFO.txt`.
+Модуль ссылается на `@rpath/libcrypto.3.dylib`; пути
 Homebrew в его зависимости быть не должно. Его собственный `LC_RPATH` указывает
 на `@loader_path/..`: при размещении провайдера в `lib/ossl-modules` библиотеку
 можно положить в соседний каталог `lib`. В архив входят только модуль и

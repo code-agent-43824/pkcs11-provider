@@ -29,6 +29,15 @@ esac
 test -s "$package_dir/lib/ossl-modules/$module"
 if [ "$module" = pkcs11.dylib ]; then
     grep -q '^Conda-forge OpenSSL package: ' "$package_dir/BUILD-INFO.txt"
+    grep -Fxq 'Minimum macOS: 11.0' "$package_dir/BUILD-INFO.txt"
+    min_macos=$(otool -l "$package_dir/lib/ossl-modules/$module" | awk '
+        $1 == "cmd" && $2 == "LC_BUILD_VERSION" { in_build_version = 1 }
+        in_build_version && $1 == "minos" { print $2; exit }
+    ')
+    if [ "$min_macos" != 11.0 ]; then
+        echo "Expected macOS 11.0 deployment target, found: $min_macos" >&2
+        exit 1
+    fi
     otool -L "$package_dir/lib/ossl-modules/$module" \
         | grep -F '@rpath/libcrypto.3.dylib'
     otool -l "$package_dir/lib/ossl-modules/$module" \
