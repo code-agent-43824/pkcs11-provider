@@ -22,9 +22,9 @@ openssl list -providers -provider default -provider pkcs11 -verbose
 cc -I "$PKCS11_DEV/include" myapp.c $(pkg-config --cflags --libs libcrypto) -o myapp
 ```
 
-В приложении вызовите `OSSL_PROVIDER_load(NULL, "pkcs11")`. Пример компиляции
-и загрузки из распакованного архива выполняется в
-`scripts/verify-dev-archive.sh` с исходником `tests/dev-consumer.c`.
+В приложении вызовите `OSSL_PROVIDER_load(NULL, "pkcs11")`. Скрипт
+`scripts/verify-dev-archive.sh` проверяет состав архива и загрузку
+распакованного модуля через OpenSSL.
 
 Для запуска нужен совместимый OpenSSL 3 и драйвер PKCS #11 для вашего токена.
 Версия OpenSSL агента сборки записана в `BUILD-INFO.txt`. Linux-архивы

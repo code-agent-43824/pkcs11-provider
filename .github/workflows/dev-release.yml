@@ -10,7 +10,9 @@ on:
       - 'src/**'
       - 'scripts/package-dev.sh'
       - 'scripts/verify-dev-archive.sh'
-      - 'tests/dev-consumer.c'
+      - 'tests/meson.build'
+      - 'tests/tecpoint.c'
+      - 'tests/turi_parse.c'
   workflow_dispatch:
 
 permissions:

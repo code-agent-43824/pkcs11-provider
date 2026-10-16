@@ -20,18 +20,7 @@ BuildRequires: meson
 BuildRequires: gnupg2
 %endif
 
-# for tests
-BuildRequires: nss-devel
-BuildRequires: nss-softokn
-BuildRequires: nss-softokn-devel
-BuildRequires: nss-tools
-BuildRequires: openssl
-BuildRequires: softhsm
-BuildRequires: opensc
-BuildRequires: p11-kit-devel
 BuildRequires: xz
-BuildRequires: expect
-BuildRequires: xxd
 
 
 %description
