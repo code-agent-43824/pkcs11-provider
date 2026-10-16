@@ -135,8 +135,8 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          pkg-config --exists p11-kit-1
-          PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          PKCS11_PROVIDER_MODULE="$(pacman -Ql mingw-w64-ucrt-x86_64-p11-kit \
+            | awk '$2 ~ /p11-kit-proxy[.]dll$/ { print $2; exit }')"
           test -f "$PKCS11_PROVIDER_MODULE"
           export PKCS11_PROVIDER_MODULE
           meson setup builddir -Dbuildtype=debug
@@ -160,7 +160,8 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          export PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          export PKCS11_PROVIDER_MODULE="$(pacman -Ql mingw-w64-ucrt-x86_64-p11-kit \
+            | awk '$2 ~ /p11-kit-proxy[.]dll$/ { print $2; exit }')"
           scripts/package-dev.sh builddir '${{ matrix.target }}' dist
           scripts/verify-dev-archive.sh \
             'dist/pkcs11-provider-dev-${{ matrix.target }}.tar.gz' \
