@@ -40,17 +40,21 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc meson ninja-build pkg-config libssl-dev openssl
+          sudo apt-get install -y gcc meson ninja-build pkg-config libssl-dev openssl \
+            libp11-kit-dev p11-kit-modules
 
       - name: Install build dependencies on macOS
         if: runner.os == 'macOS'
         run: |
-          brew install meson ninja openssl@3 pkgconf
+          brew install meson ninja openssl@3 pkgconf p11-kit
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> "$GITHUB_ENV"
 
       - name: Build and test
         run: |
+          export PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          test -f "$PKCS11_PROVIDER_MODULE"
+          echo "PKCS11_PROVIDER_MODULE=$PKCS11_PROVIDER_MODULE" >> "$GITHUB_ENV"
           meson setup builddir -Dbuildtype=debug
           meson compile -C builddir pkcs11
           meson test -C builddir --suite unittests --print-errorlogs
