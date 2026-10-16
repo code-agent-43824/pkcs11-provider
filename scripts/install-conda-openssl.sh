@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 code-agent-43824
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 
 if [ "$#" -ne 2 ]; then

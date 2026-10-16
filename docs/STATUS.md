@@ -1,15 +1,15 @@
 # Состояние проекта
 
-Текущий dev-релиз: `pkcs11-provider-dev-build-16`, обычный GitHub Release со
+Текущий dev-релиз: `pkcs11-provider-dev-build-17`, обычный GitHub Release со
 статусом Latest. GitHub Actions собрал пять архивов для Linux x86_64/ARM64,
 macOS Intel/ARM64 и Windows UCRT64 x86_64. На каждой платформе прошли два
 прямых unit-теста и загрузка готового модуля через OpenSSL. Скачанные архивы
 прошли `SHA256SUMS`; Windows `BUILD-INFO.txt` содержит SHA выпуска.
 
-В Meson остались два прямых unit-теста. Локальная сборка, Address Sanitizer,
-actionlint и REUSE прошли; GitHub Actions подтвердил Address Sanitizer,
-Shellcheck, REUSE и csbuild. `imported-softokn`, остальные сценарии с токенами
-и сквозные тесты удалены по решению владельца.
+В Meson остались два прямых unit-теста. Локальная сборка и actionlint прошли;
+GitHub Actions подтвердил Address Sanitizer, Shellcheck и csbuild. Проверка
+REUSE требует повторного запуска после исправления ниже. `imported-softokn`,
+остальные сценарии с токенами и сквозные тесты удалены по решению владельца.
 
 Windows UCRT64 цель использует готовый пакет OpenSSL из MSYS2. Перед каждой
 сборкой workflow сверяет версию пакета; кэш для версии 3.6.5-1 был
@@ -19,9 +19,11 @@ Windows UCRT64 цель использует готовый пакет OpenSSL �
 
 macOS сборки используют проверенные SHA-256 пакетов conda-forge OpenSSL
 3.6.5 для Intel и ARM64. Обе сборки и архивы загрузились через OpenSSL, а
-модули импортируют `@rpath/libcrypto.3.dylib`. В выпуске № 16 в `LC_RPATH`
-macOS модулей остался временный путь GitHub runner; исправление добавлено в
-упаковку, но новый выпуск ещё не проверен.
+модули импортируют `@rpath/libcrypto.3.dylib`. В выпуске № 17 оба модуля
+содержат только относительный `LC_RPATH` `@loader_path/..`; временного пути
+GitHub runner нет. Проверка REUSE для этого коммита не прошла из-за отсутствия
+лицензионных метаданных у нового скрипта установки OpenSSL. Исправление
+ожидает повторного CI и выпуска.
 
 Коммиты форка после `e5ff476` в `main` имеют автора и коммиттера
 `code-agent-43824`. Предыдущие релизные теги сохраняют исходные SHA и
