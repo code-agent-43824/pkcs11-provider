@@ -16,6 +16,7 @@ tar -C "$stage_dir" -xzf "$archive"
 package_dir="$stage_dir/pkcs11-provider-dev-$target"
 test -s "$package_dir/include/pkcs11.h"
 test -s "$package_dir/BUILD-INFO.txt"
+grep -Eq '^Git commit: [0-9a-f]{40}$' "$package_dir/BUILD-INFO.txt"
 test -s "$package_dir/COPYING"
 test -d "$package_dir/LICENSES"
 

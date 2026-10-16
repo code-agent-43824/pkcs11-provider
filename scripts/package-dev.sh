@@ -29,6 +29,11 @@ output_dir=$(cd "$output_dir" && pwd)
 
 stage_dir=$(mktemp -d)
 trap 'rm -rf "$stage_dir"' EXIT
+git_commit=${GITHUB_SHA:-}
+if [ -z "$git_commit" ]; then
+    git_commit=$(git rev-parse HEAD)
+fi
+test -n "$git_commit"
 package="pkcs11-provider-dev-$target"
 package_dir="$stage_dir/$package"
 mkdir -p "$package_dir/lib/ossl-modules" "$package_dir/include"
@@ -38,7 +43,7 @@ cp COPYING "$package_dir/"
 cp -R LICENSES "$package_dir/"
 
 cat > "$package_dir/BUILD-INFO.txt" <<EOF
-Git commit: $(git rev-parse HEAD)
+Git commit: $git_commit
 Target: $target
 OpenSSL: $(openssl version -v)
 Build type: debug, unstripped
