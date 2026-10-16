@@ -53,6 +53,10 @@ if [ -n "${MSYS2_OPENSSL_PACKAGE:-}" ]; then
     printf 'MSYS2 OpenSSL package: %s\n' "$MSYS2_OPENSSL_PACKAGE" \
         >> "$package_dir/BUILD-INFO.txt"
 fi
+if [ -n "${CONDA_OPENSSL_PREFIX:-}" ]; then
+    cat "$CONDA_OPENSSL_PREFIX/package-source.txt" \
+        >> "$package_dir/BUILD-INFO.txt"
+fi
 
 cat > "$package_dir/README.md" <<'EOF'
 # Dev-архив pkcs11-provider
@@ -63,15 +67,17 @@ cat > "$package_dir/README.md" <<'EOF'
 
 `include/pkcs11.h` описывает интерфейс PKCS #11 для драйверов токенов.
 Это не API провайдера. Для разработки приложений с OpenSSL нужны заголовки
-совместимой системной установки OpenSSL; они не входят в архив.
+совместимой установки OpenSSL; они не входят в архив.
 
 Версия OpenSSL сборочного агента указана в `BUILD-INFO.txt`. Бинарный модуль
 зависит от совместимой библиотеки OpenSSL и драйвера PKCS #11 на целевой машине.
 Windows DLL OpenSSL в архив не входят: установите OpenSSL 3 для MSYS2 UCRT64
 той же архитектуры и сделайте его DLL доступными приложению. Windows-модуль
 также использует runtime `libwinpthread-1.dll` из MSYS2 UCRT64.
-На macOS требуется отдельный OpenSSL 3 из Homebrew `openssl@3`; системная
-криптобиблиотека macOS не является заменой OpenSSL 3.
+На macOS модуль собран с готовым OpenSSL 3 из conda-forge; библиотеки OpenSSL
+не входят в архив. Для запуска предоставьте совместимые `libcrypto.3.dylib`
+и, если приложению нужен TLS, `libssl.3.dylib` той же архитектуры через
+`@rpath`. Приложение и провайдер должны использовать одну копию libcrypto.
 EOF
 
 archive="$output_dir/$package.tar.gz"

@@ -27,6 +27,11 @@ case "$(uname -s)" in
     *) echo "Unsupported host platform" >&2; exit 2 ;;
 esac
 test -s "$package_dir/lib/ossl-modules/$module"
+if [ "$module" = pkcs11.dylib ]; then
+    grep -q '^Conda-forge OpenSSL package: ' "$package_dir/BUILD-INFO.txt"
+    otool -L "$package_dir/lib/ossl-modules/$module" \
+        | grep -F '@rpath/libcrypto.3.dylib'
+fi
 
 OPENSSL_MODULES="$package_dir/lib/ossl-modules" \
     openssl list -providers -provider default -provider pkcs11 -verbose \

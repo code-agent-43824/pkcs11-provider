@@ -9,6 +9,7 @@ on:
       - 'meson_options.txt'
       - 'src/**'
       - 'scripts/package-dev.sh'
+      - 'scripts/install-conda-openssl.sh'
       - 'scripts/verify-dev-archive.sh'
       - 'tests/meson.build'
       - 'tests/tecpoint.c'
@@ -50,9 +51,16 @@ jobs:
       - name: Install build dependencies on macOS
         if: runner.os == 'macOS'
         run: |
-          brew install meson ninja openssl@3 pkgconf p11-kit
-          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> "$GITHUB_ENV"
+          brew install meson ninja pkgconf p11-kit zstd
+
+      - name: Install prebuilt conda-forge OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          prefix="$RUNNER_TEMP/conda-openssl"
+          scripts/install-conda-openssl.sh '${{ matrix.target }}' "$prefix"
+          echo "CONDA_OPENSSL_PREFIX=$prefix" >> "$GITHUB_ENV"
+          echo "$prefix/bin" >> "$GITHUB_PATH"
+          echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$(brew --prefix p11-kit)/lib/pkgconfig" >> "$GITHUB_ENV"
 
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
@@ -112,6 +120,10 @@ jobs:
       - name: Build and test
         if: runner.os != 'Windows'
         run: |
+          if [ "$RUNNER_OS" = 'macOS' ]; then
+            test "$(pkg-config --variable=prefix libcrypto)" = "$CONDA_OPENSSL_PREFIX"
+            test "$(command -v openssl)" = "$CONDA_OPENSSL_PREFIX/bin/openssl"
+          fi
           pkg-config --exists p11-kit-1
           PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
           if [ "$RUNNER_OS" = 'macOS' ] && [ ! -f "$PKCS11_PROVIDER_MODULE" ]; then
@@ -128,6 +140,7 @@ jobs:
             | grep -F 'name: PKCS#11 Provider'
           if [ "$RUNNER_OS" = 'macOS' ]; then
             otool -L builddir/src/pkcs11.dylib
+            otool -L builddir/src/pkcs11.dylib | grep -F '@rpath/libcrypto.3.dylib'
           fi
 
       - name: Build and test on Windows

@@ -4,7 +4,7 @@
 
 План: заменить источник готового OpenSSL 3 в macOS GitHub Actions на пакеты conda-forge для двух архитектур, закрепить SHA-256, проверить фактические зависимости собранных модулей и новый Release. Владелец уточнил состав macOS архива: только готовый провайдер и заголовок, без библиотек OpenSSL.
 
-Сделано: проверены готовые пакеты conda-forge OpenSSL 3.6.5 для `osx-arm64` и `osx-64`. Оба содержат `libcrypto.3.dylib`, `libssl.3.dylib`, `openssl` и pkg-config файлы; install name библиотек — `@rpath`, CLI использует `@loader_path/../lib/`. Опубликованные SHA-256 пакетов получены из метаданных conda-forge.
+Сделано: проверены готовые пакеты conda-forge OpenSSL 3.6.5 для `osx-arm64` и `osx-64`. Оба содержат `libcrypto.3.dylib`, `libssl.3.dylib`, `openssl` и pkg-config файлы; install name библиотек — `@rpath`, CLI использует `@loader_path/../lib/`. Опубликованные SHA-256 пакетов получены из метаданных conda-forge. Добавлен скрипт загрузки с проверкой SHA-256 и исправлением pkg-config prefix; macOS workflow направлен на эти пакеты. Локально оба архива прошли сверку SHA-256 и распаковку, `pkg-config` вернул версию 3.6.5 и путь распаковки. Публикация нового выпуска ожидает проверки GitHub runners.
 
 Дальше: добавить воспроизводимую загрузку пакетов в workflow, проверить macOS runners и релиз.
 
