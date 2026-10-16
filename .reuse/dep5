@@ -43,6 +43,15 @@ Copyright: (C) 2022 - 2026 Simo Sorce <simo@redhat.com>
 License: Apache-2.0
 
 #
+# Development release scripts and archive consumer test
+#
+Files: scripts/package-dev.sh
+       scripts/verify-dev-archive.sh
+       tests/dev-consumer.c
+Copyright: (C) 2026 Kirill Mes
+License: Apache-2.0
+
+#
 # Public Domain PKCS#11 headers
 #
 Files: src/pkcs11.h
