@@ -1,0 +1,105 @@
+name: Dev release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dev-release.yml'
+      - 'meson.build'
+      - 'meson_options.txt'
+      - 'src/**'
+      - 'scripts/package-dev.sh'
+      - 'scripts/verify-dev-archive.sh'
+      - 'tests/dev-consumer.c'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x86_64-ubuntu24.04
+          - runner: ubuntu-24.04-arm
+            target: linux-aarch64-ubuntu24.04
+          - runner: macos-15
+            target: macos-arm64-15
+          - runner: macos-15-intel
+            target: macos-x86_64-15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install build dependencies on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc meson ninja-build pkg-config libssl-dev openssl
+
+      - name: Install build dependencies on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install meson ninja openssl@3 pkgconf
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> "$GITHUB_ENV"
+
+      - name: Build and test
+        run: |
+          meson setup builddir -Dbuildtype=debug
+          meson compile -C builddir pkcs11
+          meson test -C builddir --suite unittests --print-errorlogs
+          OPENSSL_MODULES="$PWD/builddir/src" \
+            openssl list -providers -provider default -provider pkcs11 -verbose \
+            | grep -F 'name: PKCS#11 Provider'
+
+      - name: Package and verify archive
+        run: |
+          scripts/package-dev.sh builddir '${{ matrix.target }}' dist
+          package="pkcs11-provider-dev-${{ matrix.target }}"
+          archive="dist/$package.tar.gz"
+          scripts/verify-dev-archive.sh "$archive" '${{ matrix.target }}'
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dev-${{ matrix.target }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    name: Publish prerelease
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish archives and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 4
+          (cd dist && sha256sum *.tar.gz > SHA256SUMS)
+          tag="dev-${GITHUB_SHA:0:12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cat > release-notes.md <<'EOF'
+          Предварительные dev-сборки pkcs11-provider с заголовком PKCS #11.
+          Состав архива и требования к OpenSSL описаны в README.md внутри архива.
+          Для проверки загрузите архив своей платформы, сверьте SHA256SUMS и
+          запустите OpenSSL с OPENSSL_MODULES, указывающим на lib/ossl-modules.
+          EOF
+          gh release create "$tag" dist/*.tar.gz dist/SHA256SUMS \
+            --target "$GITHUB_SHA" --title "$tag" --prerelease \
+            --notes-file release-notes.md

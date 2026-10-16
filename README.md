@@ -17,6 +17,8 @@ Vulnerability" template in the issues reporting page.
 
 See [BUILD](BUILD.md) for more details about building and installing the provider.
 
+Для подключения готовых dev-сборок в других проектах см. [dev-архивы](docs/DEV-ARTIFACTS.md).
+
 ### Usage
 
 Configuration directives for the provider are documented in [provider-pkcs11(7)](docs/provider-pkcs11.7.md)
