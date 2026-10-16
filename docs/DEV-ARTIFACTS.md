@@ -3,7 +3,8 @@
 Workflow `.github/workflows/dev-release.yml` собирает предварительные архивы
 из `main`. Каждый архив содержит готовый модуль OpenSSL, заголовок
 `include/pkcs11.h`, сведения о сборке и лицензии. Контрольные суммы опубликованы
-рядом с архивами в `SHA256SUMS`.
+рядом с архивами в `SHA256SUMS`. Архивы доступны на
+[странице релизов](https://github.com/code-agent-43824/pkcs11-provider/releases).
 
 `pkcs11-provider` создаётся Meson как `shared_module`. Он загружается OpenSSL
 во время работы приложения и не предоставляет библиотеку для линковки.
