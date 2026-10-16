@@ -58,7 +58,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           msystem: UCRT64
-          update: false
+          update: true
 
       - name: Check current MSYS2 OpenSSL version
         if: runner.os == 'Windows'
@@ -89,7 +89,6 @@ jobs:
           if [ -d .cache/msys2-openssl ]; then
             cp .cache/msys2-openssl/* /var/cache/pacman/pkg/
           fi
-          pacman -Syu --noconfirm
           pacman -S --needed --noconfirm "$package" \
             mingw-w64-ucrt-x86_64-gcc \
             mingw-w64-ucrt-x86_64-meson \
