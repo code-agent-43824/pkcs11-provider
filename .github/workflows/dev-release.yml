@@ -52,8 +52,13 @@ jobs:
 
       - name: Build and test
         run: |
-          export PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          pkg-config --exists p11-kit-1
+          PKCS11_PROVIDER_MODULE="$(pkg-config --variable=proxy_module p11-kit-1)"
+          if [ "$RUNNER_OS" = 'macOS' ] && [ ! -f "$PKCS11_PROVIDER_MODULE" ]; then
+            PKCS11_PROVIDER_MODULE="${PKCS11_PROVIDER_MODULE%.so}.dylib"
+          fi
           test -f "$PKCS11_PROVIDER_MODULE"
+          export PKCS11_PROVIDER_MODULE
           echo "PKCS11_PROVIDER_MODULE=$PKCS11_PROVIDER_MODULE" >> "$GITHUB_ENV"
           meson setup builddir -Dbuildtype=debug
           meson compile -C builddir pkcs11
