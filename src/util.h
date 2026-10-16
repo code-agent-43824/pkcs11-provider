@@ -4,6 +4,8 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include <pthread.h>
+
 #define CKATTR_ASSIGN(x, _a, _b, _c) \
     do { \
         x.type = (_a); \
