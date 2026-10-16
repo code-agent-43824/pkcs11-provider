@@ -1,6 +1,6 @@
 # Состояние проекта
 
-Текущий dev-релиз: `pkcs11-provider-dev-build-15`, обычный GitHub Release со
+Текущий dev-релиз: `pkcs11-provider-dev-build-16`, обычный GitHub Release со
 статусом Latest. GitHub Actions собрал пять архивов для Linux x86_64/ARM64,
 macOS Intel/ARM64 и Windows UCRT64 x86_64. На каждой платформе прошли два
 прямых unit-теста и загрузка готового модуля через OpenSSL. Скачанные архивы
@@ -17,9 +17,11 @@ Windows UCRT64 цель использует готовый пакет OpenSSL �
 `libwinpthread-1.dll`; они не входят в архив по решению владельца.
 Точные цели задаёт `.github/workflows/dev-release.yml`.
 
-Для следующих macOS сборок источник OpenSSL переключён на проверенные пакеты
-conda-forge; GitHub Actions и новый Release для этого изменения пока не
-проверены. Последний подтверждённый выпуск остаётся № 15.
+macOS сборки используют проверенные SHA-256 пакетов conda-forge OpenSSL
+3.6.5 для Intel и ARM64. Обе сборки и архивы загрузились через OpenSSL, а
+модули импортируют `@rpath/libcrypto.3.dylib`. В выпуске № 16 в `LC_RPATH`
+macOS модулей остался временный путь GitHub runner; исправление добавлено в
+упаковку, но новый выпуск ещё не проверен.
 
 Коммиты форка после `e5ff476` в `main` имеют автора и коммиттера
 `code-agent-43824`. Предыдущие релизные теги сохраняют исходные SHA и

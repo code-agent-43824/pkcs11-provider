@@ -31,6 +31,15 @@ if [ "$module" = pkcs11.dylib ]; then
     grep -q '^Conda-forge OpenSSL package: ' "$package_dir/BUILD-INFO.txt"
     otool -L "$package_dir/lib/ossl-modules/$module" \
         | grep -F '@rpath/libcrypto.3.dylib'
+    otool -l "$package_dir/lib/ossl-modules/$module" \
+        | grep -F 'path @loader_path/.. (offset'
+    codesign --verify "$package_dir/lib/ossl-modules/$module"
+    if [ -n "${CONDA_OPENSSL_PREFIX:-}" ] && \
+       otool -l "$package_dir/lib/ossl-modules/$module" \
+           | grep -F "$CONDA_OPENSSL_PREFIX"; then
+        echo "Build runner path remains in macOS module" >&2
+        exit 1
+    fi
 fi
 
 OPENSSL_MODULES="$package_dir/lib/ossl-modules" \

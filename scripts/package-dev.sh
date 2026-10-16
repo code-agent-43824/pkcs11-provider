@@ -38,6 +38,12 @@ package="pkcs11-provider-dev-$target"
 package_dir="$stage_dir/$package"
 mkdir -p "$package_dir/lib/ossl-modules" "$package_dir/include"
 cp "$module_path" "$package_dir/lib/ossl-modules/"
+if [ "$module" = pkcs11.dylib ] && [ -n "${CONDA_OPENSSL_PREFIX:-}" ]; then
+    staged_module="$package_dir/lib/ossl-modules/$module"
+    install_name_tool -delete_rpath "$CONDA_OPENSSL_PREFIX/lib" "$staged_module"
+    install_name_tool -add_rpath '@loader_path/..' "$staged_module"
+    codesign --force --sign - "$staged_module"
+fi
 cp src/pkcs11.h "$package_dir/include/"
 cp COPYING "$package_dir/"
 cp -R LICENSES "$package_dir/"
@@ -77,7 +83,8 @@ Windows DLL OpenSSL в архив не входят: установите OpenSS
 На macOS модуль собран с готовым OpenSSL 3 из conda-forge; библиотеки OpenSSL
 не входят в архив. Для запуска предоставьте совместимые `libcrypto.3.dylib`
 и, если приложению нужен TLS, `libssl.3.dylib` той же архитектуры через
-`@rpath`. Приложение и провайдер должны использовать одну копию libcrypto.
+`@rpath`. Модуль ищет их также на уровень выше `ossl-modules`, в каталоге
+`lib` архива. Приложение и провайдер должны использовать одну копию libcrypto.
 EOF
 
 archive="$output_dir/$package.tar.gz"
