@@ -8,6 +8,7 @@
 #else
 #include <dlfcn.h>
 #endif
+#include <stdio.h>
 #include <string.h>
 
 #ifdef _WIN32
