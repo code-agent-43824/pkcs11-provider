@@ -84,7 +84,7 @@ jobs:
 
   publish:
     if: github.ref == 'refs/heads/main'
-    name: Publish prerelease
+    name: Publish release
     needs: build
     runs-on: ubuntu-24.04
     permissions:
@@ -104,13 +104,16 @@ jobs:
           set -euo pipefail
           test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 4
           (cd dist && sha256sum *.tar.gz > SHA256SUMS)
-          tag="dev-${GITHUB_SHA:0:12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          tag="pkcs11-provider-dev-build-${GITHUB_RUN_NUMBER}"
+          if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then
+            tag="${tag}-retry${GITHUB_RUN_ATTEMPT}"
+          fi
           cat > release-notes.md <<'EOF'
-          Предварительные dev-сборки pkcs11-provider с заголовком PKCS #11.
+          Dev-сборки pkcs11-provider с заголовком PKCS #11.
           Состав архива и требования к OpenSSL описаны в README.md внутри архива.
           Для проверки загрузите архив своей платформы, сверьте SHA256SUMS и
           запустите OpenSSL с OPENSSL_MODULES, указывающим на lib/ossl-modules.
           EOF
           gh release create "$tag" dist/*.tar.gz dist/SHA256SUMS \
-            --target "$GITHUB_SHA" --title "$tag" --prerelease \
+            --target "$GITHUB_SHA" --title "$tag" --latest \
             --notes-file release-notes.md

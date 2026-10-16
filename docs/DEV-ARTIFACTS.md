@@ -1,6 +1,6 @@
 # Dev-архивы для других проектов
 
-Workflow `.github/workflows/dev-release.yml` собирает предварительные архивы
+Workflow `.github/workflows/dev-release.yml` собирает dev-архивы
 из `main`. Каждый архив содержит готовый модуль OpenSSL, заголовок
 `include/pkcs11.h`, сведения о сборке и лицензии. Контрольные суммы опубликованы
 рядом с архивами в `SHA256SUMS`. Архивы доступны на
