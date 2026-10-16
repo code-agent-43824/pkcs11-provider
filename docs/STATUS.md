@@ -1,6 +1,6 @@
 # Состояние проекта
 
-Текущий dev-релиз: `pkcs11-provider-dev-build-6`, обычный GitHub Release со
+Текущий dev-релиз: `pkcs11-provider-dev-build-7`, обычный GitHub Release со
 статусом Latest. GitHub Actions собрал четыре архива для Linux x86_64/ARM64 и
 macOS Intel/ARM64. На каждой платформе
 прошли два прямых unit-теста и загрузка готового модуля через OpenSSL.
@@ -15,3 +15,7 @@ Shellcheck, REUSE и csbuild. `imported-softokn`, остальные сцена�
 Нативная сборка Windows не заявлена: загрузчик драйвера в `src/interface.c`
 использует POSIX `dlopen`/`dlsym`. Точные цели задаёт
 `.github/workflows/dev-release.yml`.
+
+Коммиты форка после `e5ff476` в `main` имеют автора и коммиттера
+`code-agent-43824`. Предыдущие релизные теги сохраняют исходные SHA и
+историческую атрибуцию, чтобы сведения о сборке в архивах оставались верными.
