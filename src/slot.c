@@ -11,7 +11,6 @@ struct p11prov_slot {
 
     char *login_info;
     char *cached_pin;
-    char *bad_pin;
 
     P11PROV_SESSION_POOL *pool;
     P11PROV_OBJ_POOL *objects;
@@ -368,10 +367,6 @@ void p11prov_free_slots(P11PROV_SLOTS_CTX *sctx)
         p11prov_session_pool_free(sctx->slots[i]->pool);
         p11prov_obj_pool_free(sctx->slots[i]->objects);
         OPENSSL_free(sctx->slots[i]->mechs);
-        if (sctx->slots[i]->bad_pin) {
-            OPENSSL_clear_free(sctx->slots[i]->bad_pin,
-                               strlen(sctx->slots[i]->bad_pin));
-        }
         if (sctx->slots[i]->cached_pin) {
             OPENSSL_clear_free(sctx->slots[i]->cached_pin,
                                strlen(sctx->slots[i]->cached_pin));
@@ -555,23 +550,6 @@ CK_TOKEN_INFO *p11prov_slot_get_token(P11PROV_SLOT *slot)
 const char *p11prov_slot_get_login_info(P11PROV_SLOT *slot)
 {
     return slot->login_info;
-}
-
-const char *p11prov_slot_get_bad_pin(P11PROV_SLOT *slot)
-{
-    return slot->bad_pin;
-}
-
-CK_RV p11prov_slot_set_bad_pin(P11PROV_SLOT *slot, const char *bad_pin)
-{
-    if (slot->bad_pin) {
-        OPENSSL_clear_free(slot->bad_pin, strlen(slot->bad_pin));
-    }
-    slot->bad_pin = OPENSSL_strdup(bad_pin);
-    if (!slot->bad_pin) {
-        return CKR_HOST_MEMORY;
-    }
-    return CKR_OK;
 }
 
 const char *p11prov_slot_get_cached_pin(P11PROV_SLOT *slot)

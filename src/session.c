@@ -502,9 +502,6 @@ err:
 
 CK_RV p11prov_check_user_pin_flags(CK_FLAGS flags)
 {
-    if (flags & CKF_USER_PIN_FINAL_TRY) {
-        return CKR_CANCEL;
-    }
     if (flags & CKF_USER_PIN_LOCKED) {
         return CKR_PIN_LOCKED;
     }
@@ -522,12 +519,7 @@ static CK_RV check_pin_flags_ok(P11PROV_CTX *ctx, CK_SLOT_ID slotid)
     }
 
     ret = p11prov_check_user_pin_flags(token.flags);
-    if (ret == CKR_CANCEL) {
-        P11PROV_raise(ctx, ret,
-                      "Only one auth attempt left on token. "
-                      "Canceling login attempt to avoid locking the token. "
-                      "Manual user login required to reset counter.");
-    } else if (ret == CKR_PIN_LOCKED) {
+    if (ret == CKR_PIN_LOCKED) {
         P11PROV_raise(ctx, ret, "PIN marked as locked, canceling login");
     }
 
@@ -553,7 +545,6 @@ static CK_RV token_login(P11PROV_SESSION *session, P11PROV_URI *uri,
     token = p11prov_slot_get_token(slot);
     if (!(token->flags & CKF_PROTECTED_AUTHENTICATION_PATH)) {
         const char *cached_pin = p11prov_slot_get_cached_pin(slot);
-        const char *bad_pin = p11prov_slot_get_bad_pin(slot);
         if (uri) {
             pin = (CK_UTF8CHAR_PTR)p11prov_uri_get_pin(uri);
         }
@@ -562,12 +553,6 @@ static CK_RV token_login(P11PROV_SESSION *session, P11PROV_URI *uri,
         }
         if (!pin && cached_pin) {
             pin = (CK_UTF8CHAR_PTR)cached_pin;
-        }
-        if (pin && bad_pin && strcmp((char *)pin, bad_pin) == 0) {
-            P11PROV_raise(session->provctx, CKR_PIN_INVALID,
-                          "Blocking stored PIN that failed a previous login"
-                          " to avoid blocking the token");
-            pin = NULL;
         }
         if (pin) {
             pinlen = strlen((const char *)pin);
@@ -640,16 +625,6 @@ static CK_RV token_login(P11PROV_SESSION *session, P11PROV_URI *uri,
         }
     } else if (ret == CKR_USER_ALREADY_LOGGED_IN) {
         ret = CKR_OK;
-    } else {
-        if (pin && ret == CKR_PIN_INCORRECT) {
-            CK_RV trv;
-            /* mark this pin as bad or we may end up locking the token */
-            trv = p11prov_slot_set_bad_pin(slot, (const char *)pin);
-            /* not much we can do on failure */
-            if (trv != CKR_OK) {
-                P11PROV_raise(session->provctx, trv, "Failed to set bad_pin");
-            }
-        }
     }
     if (ret == CKR_OK && pin && cache) {
         CK_RV trv;

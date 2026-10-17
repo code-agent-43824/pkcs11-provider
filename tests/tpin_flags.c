@@ -14,10 +14,11 @@ int main(void)
         { CKF_USER_PIN_TO_BE_CHANGED, CKR_OK },
         { CKF_SO_PIN_TO_BE_CHANGED, CKR_OK },
         { CKF_USER_PIN_COUNT_LOW, CKR_OK },
-        { CKF_USER_PIN_FINAL_TRY, CKR_CANCEL },
+        { CKF_USER_PIN_FINAL_TRY, CKR_OK },
         { CKF_USER_PIN_LOCKED, CKR_PIN_LOCKED },
-        { CKF_USER_PIN_TO_BE_CHANGED | CKF_USER_PIN_FINAL_TRY, CKR_CANCEL },
+        { CKF_USER_PIN_TO_BE_CHANGED | CKF_USER_PIN_FINAL_TRY, CKR_OK },
         { CKF_USER_PIN_TO_BE_CHANGED | CKF_USER_PIN_LOCKED, CKR_PIN_LOCKED },
+        { CKF_USER_PIN_FINAL_TRY | CKF_USER_PIN_LOCKED, CKR_PIN_LOCKED },
     };
 
     for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
