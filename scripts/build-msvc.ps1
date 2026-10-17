@@ -66,7 +66,8 @@ $unexpected = @($imports | Where-Object {
         'CRYPT32.dll', 'USER32.dll', 'WS2_32.dll', 'NTDLL.dll') -and
     $_ -notmatch '^(api-ms-win-|ext-ms-win-)'
 })
-if (($imports | Where-Object { $_ -eq $cryptoName }).Count -ne 1 -or $unexpected.Count -ne 0) {
+$cryptoCount = @($imports | Where-Object { $_ -eq $cryptoName }).Count
+if ($cryptoCount -ne 1 -or $unexpected.Count -ne 0) {
     throw "Unexpected provider imports: $($imports -join ', ')"
 }
 $exports = & dumpbin /nologo /exports $module | Out-String
