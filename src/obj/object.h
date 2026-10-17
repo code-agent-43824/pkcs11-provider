@@ -57,10 +57,10 @@ void p11prov_obj_set_free_template(P11PROV_OBJ *obj,
 #define MAX_FIND_ATTRS_SIZE 4
 typedef CK_RV (*p11prov_obj_get_find_attrs_fn)(
     P11PROV_OBJ *obj, CK_OBJECT_CLASS class, const OSSL_PARAM *params,
-    CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE], int *numattrs);
+    CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE], int *numattrs);
 CK_RV p11prov_obj_get_find_attrs(P11PROV_OBJ *obj, CK_OBJECT_CLASS class,
                                  const OSSL_PARAM *params,
-                                 CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE],
+                                 CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE],
                                  int *numattrs);
 void p11prov_obj_set_get_find_attrs(
     P11PROV_OBJ *obj, p11prov_obj_get_find_attrs_fn get_find_attrs);

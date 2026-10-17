@@ -307,7 +307,7 @@ static int p11prov_ec_get_template(P11PROV_OBJ *obj, CK_OBJECT_CLASS class,
 #define MAX_EC_PUB_KEY_SIZE 150
 static CK_RV p11prov_ec_get_find_attrs(
     P11PROV_OBJ *obj, CK_OBJECT_CLASS class, const OSSL_PARAM *params,
-    CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE], int *out_numattrs)
+    CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE], int *out_numattrs)
 {
     P11PROV_CTX *ctx = p11prov_obj_get_prov_ctx(obj);
     EC_GROUP *group = NULL;
@@ -1014,7 +1014,7 @@ DISPATCH_KEYMGMT_FN(ed, settable_params);
 
 static CK_RV p11prov_ed_get_find_attrs(
     P11PROV_OBJ *obj, CK_OBJECT_CLASS class, const OSSL_PARAM *params,
-    CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE], int *out_numattrs)
+    CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE], int *out_numattrs)
 {
     P11PROV_CTX *ctx = p11prov_obj_get_prov_ctx(obj);
     const OSSL_PARAM *p;
@@ -1481,7 +1481,7 @@ DISPATCH_KEYMGMT_FN(ecx, gettable_params);
 
 static CK_RV p11prov_ecx_get_find_attrs(
     P11PROV_OBJ *obj, CK_OBJECT_CLASS class, const OSSL_PARAM *params,
-    CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE], int *out_numattrs)
+    CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE], int *out_numattrs)
 {
     P11PROV_CTX *ctx = p11prov_obj_get_prov_ctx(obj);
     const OSSL_PARAM *p;

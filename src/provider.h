@@ -36,8 +36,10 @@
 
 #ifdef _MSC_VER
 #define UNUSED
+#define P11PROV_ARRAY_STATIC
 #else
 #define UNUSED __attribute__((unused))
+#define P11PROV_ARRAY_STATIC static
 #endif
 #define RET_OSSL_OK 1
 #define RET_OSSL_ERR 0

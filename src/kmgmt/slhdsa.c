@@ -159,7 +159,7 @@ static int p11prov_slhdsa_get_template(P11PROV_OBJ *obj, CK_OBJECT_CLASS class,
 
 static CK_RV p11prov_slhdsa_get_find_attrs(
     P11PROV_OBJ *obj, CK_OBJECT_CLASS class, const OSSL_PARAM *params,
-    CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE], int *out_numattrs)
+    CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE], int *out_numattrs)
 {
     P11PROV_CTX *ctx = p11prov_obj_get_prov_ctx(obj);
     CK_ULONG param_set = p11prov_obj_get_key_param_set(obj);

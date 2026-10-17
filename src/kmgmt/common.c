@@ -343,7 +343,7 @@ int p11prov_kmgmt_get_params(void *keydata, OSSL_PARAM params[])
 }
 
 CK_RV p11prov_kmgmt_param_data_to_attr(
-    CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE], int *numattrs,
+    CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE], int *numattrs,
     CK_ATTRIBUTE_TYPE type, const uint8_t *data, size_t size, bool byteswap)
 {
     CK_ATTRIBUTE *dst;
@@ -369,7 +369,7 @@ CK_RV p11prov_kmgmt_param_data_to_attr(
 }
 
 CK_RV p11prov_kmgmt_params_to_attr(
-    P11PROV_CTX *ctx, CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE],
+    P11PROV_CTX *ctx, CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE],
     int *numattrs, const OSSL_PARAM params[], const char *name,
     CK_ATTRIBUTE_TYPE type, bool byteswap)
 {
@@ -392,7 +392,7 @@ CK_RV p11prov_kmgmt_params_to_attr(
 }
 
 CK_RV p11prov_kmgmt_privkey_to_id(
-    P11PROV_CTX *ctx, CK_ATTRIBUTE attrs[static MAX_FIND_ATTRS_SIZE],
+    P11PROV_CTX *ctx, CK_ATTRIBUTE attrs[P11PROV_ARRAY_STATIC MAX_FIND_ATTRS_SIZE],
     int *numattrs, const uint8_t *data0, size_t len0, const uint8_t *data1,
     size_t len1, const uint8_t *data2, size_t len2)
 {
