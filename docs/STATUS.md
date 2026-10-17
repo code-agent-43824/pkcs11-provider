@@ -1,8 +1,8 @@
 # Состояние проекта
 
-Матрица dev-релиза дополнена сборками Windows x86/MINGW32 и
-ARM64/CLANGARM64. Их проверка на GitHub runners и публикация нового
-релиза ожидаются; текущий опубликованный выпуск ещё содержит пять целей.
+Матрица dev-релиза включает Windows x86/MINGW32, x86_64/UCRT64 и
+ARM64/CLANGARM64. Все три DLL прошли проверку PE Machine, загрузку
+через OpenSSL и прямые unit-тесты на своих GitHub runners.
 
 В `main` исправлен вход с заводским PIN при
 `CKF_USER_PIN_TO_BE_CHANGED`: провайдер передаёт PIN в `C_Login`.
@@ -14,9 +14,9 @@ ARM64/CLANGARM64. Их проверка на GitHub runners и публикац�
 прошёл ту же проверку и повторно передал неверный PIN в `C_Login`.
 На самом Рутокене исправление пока не проверялось.
 
-Текущий dev-релиз: `pkcs11-provider-dev-build-21`, обычный GitHub Release со
-статусом Latest. GitHub Actions собрал пять архивов для Linux x86_64/ARM64,
-macOS Intel/ARM64 и Windows UCRT64 x86_64. На каждой платформе прошли три
+Текущий dev-релиз: `pkcs11-provider-dev-build-22`, обычный GitHub Release со
+статусом Latest. GitHub Actions собрал семь архивов для Linux x86_64/ARM64,
+macOS Intel/ARM64 и трёх архитектур Windows. На каждой платформе прошли три
 прямых unit-теста и загрузка готового модуля через OpenSSL. Скачанные архивы
 прошли `SHA256SUMS`; Windows `BUILD-INFO.txt` содержит SHA выпуска.
 
@@ -25,10 +25,11 @@ GitHub Actions подтвердил Address Sanitizer, Shellcheck, REUSE и csbu
 `imported-softokn`, остальные сценарии с токенами и сквозные тесты удалены
 по решению владельца.
 
-Windows UCRT64 цель использует готовый пакет OpenSSL из MSYS2. Перед каждой
-сборкой workflow сверяет версию пакета; кэш для версии 3.6.5-1 был
-использован повторно. Windows DLL импортирует `libcrypto-3-x64.dll` и
-`libwinpthread-1.dll`; они не входят в архив по решению владельца.
+Все Windows цели используют готовые пакеты OpenSSL из своей среды MSYS2.
+Перед каждой сборкой workflow сверяет версию пакета; кэш разделён по
+среде и версии. В выпуске № 22 использована версия 3.6.5-1 для всех
+трёх архитектур. DLL OpenSSL не входят в архивы по решению владельца.
+MINGW32 помечен MSYS2 как устаревающая среда без прямой замены.
 Точные цели задаёт `.github/workflows/dev-release.yml`.
 
 macOS сборки используют проверенные SHA-256 пакетов conda-forge OpenSSL
