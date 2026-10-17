@@ -9,6 +9,9 @@
 #define _XOPEN_SOURCE 700
 #include "config.h"
 
+#ifdef _MSC_VER
+#include "platform/msvc.h"
+#endif
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -31,7 +34,11 @@
 #define SKEY_SUPPORT 0
 #endif
 
+#ifdef _MSC_VER
+#define UNUSED
+#else
 #define UNUSED __attribute__((unused))
+#endif
 #define RET_OSSL_OK 1
 #define RET_OSSL_ERR 0
 #define RET_OSSL_BAD -1

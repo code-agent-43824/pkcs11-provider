@@ -1092,7 +1092,7 @@ bool cyclewait_with_timeout(uint64_t max_wait, uint64_t interval,
 
 void byteswap_buf(unsigned char *src, unsigned char *dest, size_t len)
 {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if defined(_WIN32) || __BYTE_ORDER == __LITTLE_ENDIAN
     int s = 0;
     int e = len - 1;
     unsigned char sb;

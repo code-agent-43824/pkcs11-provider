@@ -32,3 +32,11 @@ if host_machine.system() == 'windows'
   )
   test('pkcs11-windows-abi', pkcs11_abi_test, suite: 'unittests')
 endif
+
+if cc.get_id() == 'msvc'
+  msvc_load_test = executable('tmsvc_load', 'tmsvc_load.c',
+                              dependencies: [libcrypto])
+  test('msvc-provider-load', msvc_load_test,
+       env: ['OPENSSL_MODULES=' + (meson.project_build_root() / 'src')],
+       suite: 'msvc')
+endif

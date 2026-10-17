@@ -45,11 +45,23 @@ conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set('PACKAGE_MAJOR', major_version)
 conf.set('PACKAGE_MINOR', minor_version)
 
-libcrypto = dependency('libcrypto', version: '>= 3.0.7', required: false)
-if not libcrypto.found()
-  libcrypto = dependency('libcrypto3', version: '>= 3.0.7', required: true)
+openssl_root = get_option('openssl_root')
+if cc.get_id() == 'msvc'
+  if openssl_root == ''
+    error('MSVC requires -Dopenssl_root pointing to an OpenSSL DLL archive')
+  endif
+  libcrypto = declare_dependency(
+    include_directories: include_directories(openssl_root / 'include'),
+    link_args: [openssl_root / 'lib' / 'libcrypto.lib'],
+  )
+  provider_path = openssl_root / 'lib' / 'ossl-modules'
+else
+  libcrypto = dependency('libcrypto', version: '>= 3.0.7', required: false)
+  if not libcrypto.found()
+    libcrypto = dependency('libcrypto3', version: '>= 3.0.7', required: true)
+  endif
+  provider_path = libcrypto.get_variable(pkgconfig: 'modulesdir')
 endif
-provider_path = libcrypto.get_variable(pkgconfig: 'modulesdir')
 
 # Set build version and build info definitions
 conf.set_quoted('P11PROV_VERSION', meson.project_version())
@@ -87,8 +99,13 @@ endforeach
 # them in glibc (for example el8). We do have them already when we run
 # the provider library and load that from openssl as openssl has them already
 # linked in, but we need them for linking self-contained binaries.
-dl_dep = cc.find_library('dl', required: false)
-pthread_dep = dependency('threads')
+if cc.get_id() == 'msvc'
+  dl_dep = declare_dependency()
+  pthread_dep = declare_dependency()
+else
+  dl_dep = cc.find_library('dl', required: false)
+  pthread_dep = dependency('threads')
+endif
 
 functions = [
   'OSSL_PROVIDER_load_ex',

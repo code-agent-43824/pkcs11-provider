@@ -47,7 +47,7 @@ pkcs11_provider_ldflags = cc.get_supported_link_arguments([
   '-Wl,--version-script,' + pkcs11_provider_map
 ])
 pkcs11_provider_pthread = pthread_dep
-if host_machine.system() == 'windows' and get_option('buildtype') == 'release'
+if host_machine.system() == 'windows' and cc.get_id() != 'msvc' and get_option('buildtype') == 'release'
   pkcs11_provider_pthread = cc.find_library('winpthread', static: true)
   if cc.get_id() == 'gcc'
     pkcs11_provider_ldflags += ['-static-libgcc']

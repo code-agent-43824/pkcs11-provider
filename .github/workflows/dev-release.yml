@@ -11,6 +11,8 @@ on:
       - 'scripts/package-dev.sh'
       - 'scripts/install-conda-openssl.sh'
       - 'scripts/verify-dev-archive.sh'
+      - 'scripts/build-msvc.ps1'
+      - 'scripts/package-msvc.py'
       - 'tests/**'
   workflow_dispatch:
 
@@ -213,10 +215,40 @@ jobs:
           path: dist/*.tar.gz
           if-no-files-found: error
 
+  build-msvc:
+    if: github.ref == 'refs/heads/main'
+    name: Build Windows ${{ matrix.arch }} MSVC
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            runner: windows-2025
+          - arch: x64
+            runner: windows-2025
+          - arch: arm64
+            runner: windows-11-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Build and verify MSVC provider
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/build-msvc.ps1 -Arch '${{ matrix.arch }}'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dev-windows-${{ matrix.arch }}-msvc
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
   publish:
     if: github.ref == 'refs/heads/main'
     name: Publish release
-    needs: build
+    needs: [build, build-msvc]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -233,7 +265,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 7
+          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 10
           (cd dist && sha256sum *.tar.gz > SHA256SUMS)
           tag="pkcs11-provider-dev-build-${GITHUB_RUN_NUMBER}"
           if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then

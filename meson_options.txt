@@ -7,3 +7,8 @@ option('build_info',
     type : 'string',
     value : '',
     description : 'Optional string with build information, like a build id')
+
+option('openssl_root',
+    type : 'string',
+    value : '',
+    description : 'Root of a prebuilt OpenSSL installation for MSVC')

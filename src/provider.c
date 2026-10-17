@@ -3,7 +3,9 @@
    SPDX-License-Identifier: Apache-2.0 */
 
 #include "provider.h"
+#ifndef _MSC_VER
 #include <pthread.h>
+#endif
 #include <string.h>
 
 #include "asymmetric_cipher.h"
