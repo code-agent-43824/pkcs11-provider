@@ -26,7 +26,25 @@ case "$(uname -s)" in
     *NT*) module=pkcs11.dll ;;
     *) echo "Unsupported host platform" >&2; exit 2 ;;
 esac
-test -s "$package_dir/lib/ossl-modules/$module"
+module_path="$package_dir/lib/ossl-modules/$module"
+test -s "$module_path"
+if [ "$module" = pkcs11.dll ]; then
+    case "$target" in
+        windows-x86_64-ucrt64) expected_machine=6486 ;;
+        windows-x86-mingw32) expected_machine=4c01 ;;
+        windows-arm64-clangarm64) expected_machine=64aa ;;
+        *) echo "Unknown Windows target: $target" >&2; exit 2 ;;
+    esac
+    pe_offset=$(od -An -tu4 -j 60 -N 4 "$module_path" | tr -d '[:space:]')
+    signature=$(od -An -tx1 -j "$pe_offset" -N 4 "$module_path" \
+        | tr -d '[:space:]')
+    machine=$(od -An -tx1 -j "$((pe_offset + 4))" -N 2 "$module_path" \
+        | tr -d '[:space:]')
+    if [ "$signature" != 50450000 ] || [ "$machine" != "$expected_machine" ]; then
+        echo "Unexpected PE architecture for $target: $machine" >&2
+        exit 1
+    fi
+fi
 if [ "$module" = pkcs11.dylib ]; then
     grep -q '^Conda-forge OpenSSL package: ' "$package_dir/BUILD-INFO.txt"
     grep -Fxq 'Minimum macOS: 11.0' "$package_dir/BUILD-INFO.txt"

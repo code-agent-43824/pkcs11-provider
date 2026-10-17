@@ -81,9 +81,9 @@ cat > "$package_dir/README.md" <<'EOF'
 
 Версия OpenSSL сборочного агента указана в `BUILD-INFO.txt`. Бинарный модуль
 зависит от совместимой библиотеки OpenSSL и драйвера PKCS #11 на целевой машине.
-Windows DLL OpenSSL в архив не входят: установите OpenSSL 3 для MSYS2 UCRT64
-той же архитектуры и сделайте его DLL доступными приложению. Windows-модуль
-также использует runtime `libwinpthread-1.dll` из MSYS2 UCRT64.
+Windows DLL OpenSSL в архив не входят: установите OpenSSL 3 для той же
+архитектуры и среды MSYS2 (UCRT64 x86_64, MINGW32 x86 или CLANGARM64 ARM64)
+и сделайте его DLL и необходимые runtime DLL доступными приложению.
 На macOS модуль собран с готовым OpenSSL 3 из conda-forge; библиотеки OpenSSL
 не входят в архив. Для запуска предоставьте совместимые `libcrypto.3.dylib`
 и, если приложению нужен TLS, `libssl.3.dylib` той же архитектуры через

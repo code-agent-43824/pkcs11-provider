@@ -1,5 +1,22 @@
 # Журнал выводов
 
+## 2026-10-17 — доступные среды MSYS2 для Windows x86 и ARM64
+
+Гипотеза: MSYS2 предоставляет готовые пакеты OpenSSL и инструменты
+сборки для обеих дополнительных архитектур, а GitHub предоставляет
+ARM64 runner.
+
+Проверка: каталог пакетов MSYS2 показывает OpenSSL, Meson, Ninja,
+pkgconf и p11-kit для MINGW32/i686 и CLANGARM64/aarch64. Для ARM64
+есть пакет Clang, для i686 — GCC. Документация GitHub перечисляет
+`windows-11-arm`; `setup-msys2` принимает `MINGW32` и `CLANGARM64`.
+
+Вывод: для x86 можно собирать на x64 Windows runner в MINGW32, для ARM64
+на ARM64 Windows runner в CLANGARM64. MSYS2 предупреждает об устаревании
+MINGW32 без прямой замены, поэтому доступность этой среды нужно проверять
+каждым запуском CI.
+
+
 ## 2026-10-17 — повторный PIN и завершение portable SoftHSM
 
 Решение владельца: не блокировать `CKF_USER_PIN_FINAL_TRY` и не запоминать

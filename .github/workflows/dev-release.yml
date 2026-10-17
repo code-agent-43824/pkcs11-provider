@@ -36,6 +36,22 @@ jobs:
             target: macos-x86_64-15
           - runner: windows-2025
             target: windows-x86_64-ucrt64
+            msystem: UCRT64
+            msys2_prefix: /ucrt64
+            package_prefix: mingw-w64-ucrt-x86_64
+            compiler_package: mingw-w64-ucrt-x86_64-gcc
+          - runner: windows-2025
+            target: windows-x86-mingw32
+            msystem: MINGW32
+            msys2_prefix: /mingw32
+            package_prefix: mingw-w64-i686
+            compiler_package: mingw-w64-i686-gcc
+          - runner: windows-11-arm
+            target: windows-arm64-clangarm64
+            msystem: CLANGARM64
+            msys2_prefix: /clangarm64
+            package_prefix: mingw-w64-clang-aarch64
+            compiler_package: mingw-w64-clang-aarch64-clang
     steps:
       - uses: actions/checkout@v6
 
@@ -64,7 +80,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
         with:
-          msystem: UCRT64
+          msystem: ${{ matrix.msystem }}
           update: true
 
       - name: Check current MSYS2 OpenSSL version
@@ -73,7 +89,7 @@ jobs:
         shell: msys2 {0}
         run: |
           pacman -Sy --noconfirm
-          package=mingw-w64-ucrt-x86_64-openssl
+          package='${{ matrix.package_prefix }}-openssl'
           version=$(pacman -Si "$package" | sed -n 's/^Version *: *//p')
           test -n "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -84,24 +100,24 @@ jobs:
         id: openssl-cache
         with:
           path: .cache/msys2-openssl
-          key: msys2-ucrt64-openssl-${{ steps.msys2-openssl.outputs.version }}
+          key: msys2-${{ matrix.msystem }}-openssl-${{ steps.msys2-openssl.outputs.version }}
 
       - name: Install prebuilt MSYS2 OpenSSL
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          package=mingw-w64-ucrt-x86_64-openssl
+          package='${{ matrix.package_prefix }}-openssl'
           version='${{ steps.msys2-openssl.outputs.version }}'
           if [ -d .cache/msys2-openssl ]; then
             cp .cache/msys2-openssl/* /var/cache/pacman/pkg/
           fi
           pacman -S --needed --noconfirm "$package" \
-            mingw-w64-ucrt-x86_64-gcc \
-            mingw-w64-ucrt-x86_64-meson \
-            mingw-w64-ucrt-x86_64-ninja \
-            mingw-w64-ucrt-x86_64-pkgconf \
-            mingw-w64-ucrt-x86_64-p11-kit
+            '${{ matrix.compiler_package }}' \
+            '${{ matrix.package_prefix }}-meson' \
+            '${{ matrix.package_prefix }}-ninja' \
+            '${{ matrix.package_prefix }}-pkgconf' \
+            '${{ matrix.package_prefix }}-p11-kit'
           test "$(pacman -Q "$package" | cut -d ' ' -f 2)" = "$version"
           if [ ! -s "/var/cache/pacman/pkg/$package-$version-any.pkg.tar.zst" ]; then
             pacman -Sw --noconfirm "$package"
@@ -114,7 +130,7 @@ jobs:
         if: runner.os == 'Windows' && steps.openssl-cache.outputs.cache-hit != 'true'
         with:
           path: .cache/msys2-openssl
-          key: msys2-ucrt64-openssl-${{ steps.msys2-openssl.outputs.version }}
+          key: msys2-${{ matrix.msystem }}-openssl-${{ steps.msys2-openssl.outputs.version }}
 
       - name: Build and test
         if: runner.os != 'Windows'
@@ -147,9 +163,9 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          export PKG_CONFIG_PATH=/ucrt64/lib/pkgconfig
+          export PKG_CONFIG_PATH='${{ matrix.msys2_prefix }}/lib/pkgconfig'
           pkg-config --modversion libcrypto
-          PKCS11_PROVIDER_MODULE="$(pacman -Ql mingw-w64-ucrt-x86_64-p11-kit \
+          PKCS11_PROVIDER_MODULE="$(pacman -Ql '${{ matrix.package_prefix }}-p11-kit' \
             | awk '$2 ~ /p11-kit-trust[.]dll$/ { print $2; exit }')"
           test -f "$PKCS11_PROVIDER_MODULE"
           export PKCS11_PROVIDER_MODULE
@@ -159,7 +175,12 @@ jobs:
           OPENSSL_MODULES="$PWD/builddir/src" \
             openssl list -providers -provider default -provider pkcs11 -verbose \
             | grep -F 'name: PKCS#11 Provider'
-          objdump -p builddir/src/pkcs11.dll | grep -F 'OSSL_provider_init'
+          if [ "$MSYSTEM" = CLANGARM64 ]; then
+            llvm-readobj --coff-exports builddir/src/pkcs11.dll \
+              | grep -F 'OSSL_provider_init'
+          else
+            objdump -p builddir/src/pkcs11.dll | grep -F 'OSSL_provider_init'
+          fi
 
       - name: Package and verify archive
         if: runner.os != 'Windows'
@@ -174,8 +195,8 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          export PKG_CONFIG_PATH=/ucrt64/lib/pkgconfig
-          export PKCS11_PROVIDER_MODULE="$(pacman -Ql mingw-w64-ucrt-x86_64-p11-kit \
+          export PKG_CONFIG_PATH='${{ matrix.msys2_prefix }}/lib/pkgconfig'
+          export PKCS11_PROVIDER_MODULE="$(pacman -Ql '${{ matrix.package_prefix }}-p11-kit' \
             | awk '$2 ~ /p11-kit-trust[.]dll$/ { print $2; exit }')"
           scripts/package-dev.sh builddir '${{ matrix.target }}' dist
           scripts/verify-dev-archive.sh \
@@ -208,7 +229,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 5
+          test "$(find dist -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 7
           (cd dist && sha256sum *.tar.gz > SHA256SUMS)
           tag="pkcs11-provider-dev-build-${GITHUB_RUN_NUMBER}"
           if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then
