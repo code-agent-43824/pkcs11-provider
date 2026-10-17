@@ -2,7 +2,7 @@
 
 Матрица dev-релиза включает Windows x86/MINGW32, x86_64/UCRT64 и
 ARM64/CLANGARM64. Все три DLL прошли проверку PE Machine, загрузку
-через OpenSSL и прямые unit-тесты на своих GitHub runners.
+через OpenSSL и проверку прямых PE-импортов на своих GitHub runners.
 
 В `main` исправлен вход с заводским PIN при
 `CKF_USER_PIN_TO_BE_CHANGED`: провайдер передаёт PIN в `C_Login`.
@@ -14,11 +14,12 @@ ARM64/CLANGARM64. Все три DLL прошли проверку PE Machine, з
 прошёл ту же проверку и повторно передал неверный PIN в `C_Login`.
 На самом Рутокене исправление пока не проверялось.
 
-Текущий dev-релиз: `pkcs11-provider-dev-build-22`, обычный GitHub Release со
+Текущий dev-релиз: `pkcs11-provider-dev-build-23`, обычный GitHub Release со
 статусом Latest. GitHub Actions собрал семь архивов для Linux x86_64/ARM64,
 macOS Intel/ARM64 и трёх архитектур Windows. На каждой платформе прошли три
-прямых unit-теста и загрузка готового модуля через OpenSSL. Скачанные архивы
-прошли `SHA256SUMS`; Windows `BUILD-INFO.txt` содержит SHA выпуска.
+прямых unit-теста debug-сборки и загрузка готового release-модуля через OpenSSL.
+Скачанные архивы прошли `SHA256SUMS`; все `BUILD-INFO.txt` указывают тип
+`release` и SHA исходного коммита.
 
 В Meson есть три прямых unit-теста. Локальная сборка прошла;
 GitHub Actions подтвердил Address Sanitizer, Shellcheck, REUSE и csbuild.
@@ -27,8 +28,11 @@ GitHub Actions подтвердил Address Sanitizer, Shellcheck, REUSE и csbu
 
 Все Windows цели используют готовые пакеты OpenSSL из своей среды MSYS2.
 Перед каждой сборкой workflow сверяет версию пакета; кэш разделён по
-среде и версии. В выпуске № 22 использована версия 3.6.5-1 для всех
-трёх архитектур. DLL OpenSSL не входят в архивы по решению владельца.
+среде и версии. В выпуске № 23 использована версия 3.6.5-1 для всех
+трёх архитектур. Release-модули не импортируют MinGW pthread и GCC runtime:
+они связаны статически. Все три DLL напрямую импортируют только системные
+Windows DLL и свою `libcrypto`. DLL OpenSSL не входят в архивы по решению
+владельца; приложение должно предоставить общую с провайдером `libcrypto`.
 MINGW32 помечен MSYS2 как устаревающая среда без прямой замены.
 Точные цели задаёт `.github/workflows/dev-release.yml`.
 

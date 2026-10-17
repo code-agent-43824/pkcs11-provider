@@ -21,8 +21,15 @@ winpthreads и статический libgcc GCC; проверка архива 
 прошли три прямых unit-теста, сборка release-модуля, загрузка OpenSSL и
 проверка Linux-архива; `actionlint` и `bash -n` прошли.
 
-Дальше: проверить Windows-линковку и остальные платформы в GitHub Actions,
-содержимое релиза и контрольные суммы.
+Проверка выпуска: все семь платформенных сборок, Address sanitizer, Shellcheck,
+REUSE и csbuild прошли. В каждой платформенной сборке прошли три прямых
+unit-теста debug-модуля и загрузка release-модуля через OpenSSL. Обычный
+GitHub Release № 23 содержит семь release-архивов; все семь прошли
+`SHA256SUMS`. Независимый разбор PE всех трёх Windows DLL подтвердил отсутствие
+импортов `libwinpthread` и `libgcc` и наличие только системных DLL и своей
+`libcrypto`. Во всех `BUILD-INFO.txt` указан `release`.
+
+Дальше: работа завершена.
 
 ## 2026-10-17 — сборки Windows x86 и ARM64
 
