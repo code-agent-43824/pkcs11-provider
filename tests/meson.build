@@ -23,3 +23,12 @@ pin_flags_test = executable(
 test('ec-point-decode', ec_point_test, suite: 'unittests')
 test('uri-parse', uri_parse_test, suite: 'unittests')
 test('pin-flags', pin_flags_test, suite: 'unittests')
+
+if host_machine.system() == 'windows'
+  pkcs11_abi_test = executable(
+    'tpkcs11_abi',
+    ['tpkcs11_abi.c'],
+    include_directories: include_directories('../src'),
+  )
+  test('pkcs11-windows-abi', pkcs11_abi_test, suite: 'unittests')
+endif

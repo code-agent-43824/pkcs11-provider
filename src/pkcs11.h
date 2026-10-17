@@ -3,6 +3,10 @@
 #ifndef _PD_PKCS11_
 #define _PD_PKCS11_
 
+#ifdef _WIN32
+#pragma pack(push, cryptoki, 1)
+#endif
+
 #define CRYPTOKI_VERSION_MAJOR 3
 #define CRYPTOKI_VERSION_MINOR 2
 #define CRYPTOKI_VERSION_AMENDMENT 0
@@ -2767,5 +2771,8 @@ struct CK_FUNCTION_LIST {
     CK_C_WaitForSlotEvent C_WaitForSlotEvent;
 };
 
+#ifdef _WIN32
+#pragma pack(pop, cryptoki)
+#endif
 
 #endif
