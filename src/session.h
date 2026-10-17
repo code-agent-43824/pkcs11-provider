@@ -5,6 +5,7 @@
 #define _SESSION_H
 
 /* Sessions */
+CK_RV p11prov_check_user_pin_flags(CK_FLAGS flags);
 CK_RV p11prov_session_pool_init(P11PROV_CTX *ctx, CK_TOKEN_INFO *token,
                                 CK_SLOT_ID id, P11PROV_SESSION_POOL **_pool);
 void p11prov_session_pool_free(P11PROV_SESSION_POOL *pool);

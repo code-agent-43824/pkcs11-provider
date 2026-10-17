@@ -500,6 +500,17 @@ err:
     return ret;
 }
 
+CK_RV p11prov_check_user_pin_flags(CK_FLAGS flags)
+{
+    if (flags & CKF_USER_PIN_FINAL_TRY) {
+        return CKR_CANCEL;
+    }
+    if (flags & CKF_USER_PIN_LOCKED) {
+        return CKR_PIN_LOCKED;
+    }
+    return CKR_OK;
+}
+
 static CK_RV check_pin_flags_ok(P11PROV_CTX *ctx, CK_SLOT_ID slotid)
 {
     CK_TOKEN_INFO token;
@@ -510,20 +521,14 @@ static CK_RV check_pin_flags_ok(P11PROV_CTX *ctx, CK_SLOT_ID slotid)
         return ret;
     }
 
-    if (token.flags & CKF_USER_PIN_FINAL_TRY) {
-        ret = CKR_CANCEL;
+    ret = p11prov_check_user_pin_flags(token.flags);
+    if (ret == CKR_CANCEL) {
         P11PROV_raise(ctx, ret,
                       "Only one auth attempt left on token. "
                       "Canceling login attempt to avoid locking the token. "
                       "Manual user login required to reset counter.");
-    } else if (token.flags & CKF_USER_PIN_LOCKED) {
-        ret = CKR_PIN_LOCKED;
+    } else if (ret == CKR_PIN_LOCKED) {
         P11PROV_raise(ctx, ret, "PIN marked as locked, canceling login");
-    } else if (token.flags & CKF_USER_PIN_TO_BE_CHANGED) {
-        ret = CKR_PIN_EXPIRED;
-        P11PROV_raise(ctx, ret, "PIN marked as expired, canceling login");
-    } else {
-        ret = CKR_OK;
     }
 
     return ret;

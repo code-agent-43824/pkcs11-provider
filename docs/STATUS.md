@@ -1,12 +1,17 @@
 # Состояние проекта
 
+В `main` исправлен вход с заводским PIN при
+`CKF_USER_PIN_TO_BE_CHANGED`: провайдер передаёт PIN в `C_Login`.
+Локально прошли три прямых unit-теста и проверка CSR на portable SoftHSM
+с профилем Рутокена. Проверка нового выпуска на GitHub Actions ожидается.
+
 Текущий dev-релиз: `pkcs11-provider-dev-build-19`, обычный GitHub Release со
 статусом Latest. GitHub Actions собрал пять архивов для Linux x86_64/ARM64,
 macOS Intel/ARM64 и Windows UCRT64 x86_64. На каждой платформе прошли два
 прямых unit-теста и загрузка готового модуля через OpenSSL. Скачанные архивы
 прошли `SHA256SUMS`; Windows `BUILD-INFO.txt` содержит SHA выпуска.
 
-В Meson остались два прямых unit-теста. Локальная сборка и actionlint прошли;
+В Meson есть три прямых unit-теста. Локальная сборка и actionlint прошли;
 GitHub Actions подтвердил Address Sanitizer, Shellcheck, REUSE и csbuild.
 `imported-softokn`, остальные сценарии с токенами и сквозные тесты удалены
 по решению владельца.

@@ -11,9 +11,7 @@ on:
       - 'scripts/package-dev.sh'
       - 'scripts/install-conda-openssl.sh'
       - 'scripts/verify-dev-archive.sh'
-      - 'tests/meson.build'
-      - 'tests/tecpoint.c'
-      - 'tests/turi_parse.c'
+      - 'tests/**'
   workflow_dispatch:
 
 permissions:
