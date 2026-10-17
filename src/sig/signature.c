@@ -550,12 +550,16 @@ static CK_RV mech_fallback_final(P11PROV_SIG_CTX *sigctx, unsigned char *sig,
                                  size_t *siglen, size_t sigsize, size_t mdsize)
 {
     P11PROV_SIG_CTX *subctx = NULL;
-    CK_BYTE digest[mdsize];
+    CK_BYTE digest[EVP_MAX_MD_SIZE];
     unsigned int digest_len = mdsize;
     CK_OBJECT_HANDLE handle;
     const char *digest_name = NULL;
     int err;
     CK_RV ret;
+
+    if (mdsize > sizeof(digest)) {
+        return CKR_GENERAL_ERROR;
+    }
 
     err = EVP_DigestFinal_ex(sigctx->fallback_digest, digest, &digest_len);
     if (err != RET_OSSL_OK) {

@@ -563,11 +563,14 @@ static CK_RV p11prov_tls13_derive_secret(P11PROV_KDF_CTX *hkdfctx,
     if (ret != CKR_OK) {
         return ret;
     }
+    if (hashlen > sizeof(saltbuf)) {
+        return CKR_GENERAL_ERROR;
+    }
     saltlen = hashlen;
 
     if (hkdfctx->salt) {
         P11PROV_OBJ *ek = NULL;
-        unsigned char info[hashlen];
+        unsigned char info[EVP_MAX_MD_SIZE];
         const char *mdname;
         data_buffer digest_data[1] = { 0 }; /* intentionally empty */
         data_buffer digest = { .data = info, .length = hashlen };

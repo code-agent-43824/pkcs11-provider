@@ -17,9 +17,20 @@ CK_RV p11prov_fetch_attributes(P11PROV_CTX *ctx, P11PROV_SESSION *session,
                                unsigned long attrnums)
 {
     CK_SESSION_HANDLE sess = p11prov_session_handle(session);
-    CK_ATTRIBUTE q[attrnums];
-    CK_ATTRIBUTE r[attrnums];
+    CK_ATTRIBUTE *q;
+    CK_ATTRIBUTE *r;
     CK_RV ret;
+
+    if (attrnums > SIZE_MAX / sizeof(*q)) {
+        return CKR_HOST_MEMORY;
+    }
+    q = OPENSSL_malloc(attrnums * sizeof(*q));
+    r = OPENSSL_malloc(attrnums * sizeof(*r));
+    if (q == NULL || r == NULL) {
+        OPENSSL_free(q);
+        OPENSSL_free(r);
+        return CKR_HOST_MEMORY;
+    }
 
     for (size_t i = 0; i < attrnums; i++) {
         P11PROV_debug("Fetching attributes (%d): 0x%08lx", (int)i,
@@ -84,6 +95,8 @@ done:
         /* otherwise clear the mark and leave errors on the stack */
         p11prov_clear_last_error_mark(ctx);
     }
+    OPENSSL_free(q);
+    OPENSSL_free(r);
     return ret;
 }
 
