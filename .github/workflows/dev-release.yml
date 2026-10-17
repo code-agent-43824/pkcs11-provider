@@ -147,15 +147,17 @@ jobs:
           test -f "$PKCS11_PROVIDER_MODULE"
           export PKCS11_PROVIDER_MODULE
           echo "PKCS11_PROVIDER_MODULE=$PKCS11_PROVIDER_MODULE" >> "$GITHUB_ENV"
-          meson setup builddir -Dbuildtype=debug
-          meson compile -C builddir pkcs11
-          meson test -C builddir --suite unittests --print-errorlogs
-          OPENSSL_MODULES="$PWD/builddir/src" \
+          meson setup build-test -Dbuildtype=debug
+          meson compile -C build-test pkcs11
+          meson test -C build-test --suite unittests --print-errorlogs
+          meson setup build-release -Dbuildtype=release
+          meson compile -C build-release pkcs11
+          OPENSSL_MODULES="$PWD/build-release/src" \
             openssl list -providers -provider default -provider pkcs11 -verbose \
             | grep -F 'name: PKCS#11 Provider'
           if [ "$RUNNER_OS" = 'macOS' ]; then
-            otool -L builddir/src/pkcs11.dylib
-            otool -L builddir/src/pkcs11.dylib | grep -F '@rpath/libcrypto.3.dylib'
+            otool -L build-release/src/pkcs11.dylib
+            otool -L build-release/src/pkcs11.dylib | grep -F '@rpath/libcrypto.3.dylib'
           fi
 
       - name: Build and test on Windows
@@ -169,23 +171,25 @@ jobs:
             | awk '$2 ~ /p11-kit-trust[.]dll$/ { print $2; exit }')"
           test -f "$PKCS11_PROVIDER_MODULE"
           export PKCS11_PROVIDER_MODULE
-          meson setup builddir -Dbuildtype=debug
-          meson compile -C builddir pkcs11
-          meson test -C builddir --suite unittests --print-errorlogs
-          OPENSSL_MODULES="$PWD/builddir/src" \
+          meson setup build-test -Dbuildtype=debug
+          meson compile -C build-test pkcs11
+          meson test -C build-test --suite unittests --print-errorlogs
+          meson setup build-release -Dbuildtype=release
+          meson compile -C build-release pkcs11
+          OPENSSL_MODULES="$PWD/build-release/src" \
             openssl list -providers -provider default -provider pkcs11 -verbose \
             | grep -F 'name: PKCS#11 Provider'
           if [ "$MSYSTEM" = CLANGARM64 ]; then
-            llvm-readobj --coff-exports builddir/src/pkcs11.dll \
+            llvm-readobj --coff-exports build-release/src/pkcs11.dll \
               | grep -F 'OSSL_provider_init'
           else
-            objdump -p builddir/src/pkcs11.dll | grep -F 'OSSL_provider_init'
+            objdump -p build-release/src/pkcs11.dll | grep -F 'OSSL_provider_init'
           fi
 
       - name: Package and verify archive
         if: runner.os != 'Windows'
         run: |
-          scripts/package-dev.sh builddir '${{ matrix.target }}' dist
+          scripts/package-dev.sh build-release '${{ matrix.target }}' dist
           package="pkcs11-provider-dev-${{ matrix.target }}"
           archive="dist/$package.tar.gz"
           scripts/verify-dev-archive.sh "$archive" '${{ matrix.target }}'
@@ -198,7 +202,7 @@ jobs:
           export PKG_CONFIG_PATH='${{ matrix.msys2_prefix }}/lib/pkgconfig'
           export PKCS11_PROVIDER_MODULE="$(pacman -Ql '${{ matrix.package_prefix }}-p11-kit' \
             | awk '$2 ~ /p11-kit-trust[.]dll$/ { print $2; exit }')"
-          scripts/package-dev.sh builddir '${{ matrix.target }}' dist
+          scripts/package-dev.sh build-release '${{ matrix.target }}' dist
           scripts/verify-dev-archive.sh \
             'dist/pkcs11-provider-dev-${{ matrix.target }}.tar.gz' \
             '${{ matrix.target }}'

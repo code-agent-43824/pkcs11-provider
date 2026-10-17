@@ -17,6 +17,7 @@ package_dir="$stage_dir/pkcs11-provider-dev-$target"
 test -s "$package_dir/include/pkcs11.h"
 test -s "$package_dir/BUILD-INFO.txt"
 grep -Eq '^Git commit: [0-9a-f]{40}$' "$package_dir/BUILD-INFO.txt"
+grep -Fxq 'Build type: release' "$package_dir/BUILD-INFO.txt"
 test -s "$package_dir/COPYING"
 test -d "$package_dir/LICENSES"
 
@@ -30,9 +31,18 @@ module_path="$package_dir/lib/ossl-modules/$module"
 test -s "$module_path"
 if [ "$module" = pkcs11.dll ]; then
     case "$target" in
-        windows-x86_64-ucrt64) expected_machine=6486 ;;
-        windows-x86-mingw32) expected_machine=4c01 ;;
-        windows-arm64-clangarm64) expected_machine=64aa ;;
+        windows-x86_64-ucrt64)
+            expected_machine=6486
+            expected_crypto=libcrypto-3-x64.dll
+            ;;
+        windows-x86-mingw32)
+            expected_machine=4c01
+            expected_crypto=libcrypto-3.dll
+            ;;
+        windows-arm64-clangarm64)
+            expected_machine=64aa
+            expected_crypto=libcrypto-3-arm64.dll
+            ;;
         *) echo "Unknown Windows target: $target" >&2; exit 2 ;;
     esac
     pe_offset=$(od -An -tu4 -j 60 -N 4 "$module_path" | tr -d '[:space:]')
@@ -42,6 +52,27 @@ if [ "$module" = pkcs11.dll ]; then
         | tr -d '[:space:]')
     if [ "$signature" != 50450000 ] || [ "$machine" != "$expected_machine" ]; then
         echo "Unexpected PE architecture for $target: $machine" >&2
+        exit 1
+    fi
+    test -s "$package_dir/LICENSES/winpthreads-COPYING"
+    if [ "$target" = windows-arm64-clangarm64 ]; then
+        imports=$(llvm-readobj --coff-imports "$module_path" \
+            | sed -nE 's/^[[:space:]]*Name: ([^ ]+[.]dll)$/\1/p')
+    else
+        imports=$(objdump -p "$module_path" \
+            | sed -nE 's/^[[:space:]]*DLL Name: ([^ ]+[.]dll)$/\1/p')
+    fi
+    test -n "$imports"
+    crypto_count=0
+    while IFS= read -r dll; do
+        case "${dll,,}" in
+            "$expected_crypto") crypto_count=$((crypto_count + 1)) ;;
+            kernel32.dll|ntdll.dll|msvcrt.dll|advapi32.dll|bcrypt.dll|crypt32.dll|user32.dll|ws2_32.dll|api-ms-win-*.dll|ext-ms-win-*.dll) ;;
+            *) echo "Unexpected Windows DLL import: $dll" >&2; exit 1 ;;
+        esac
+    done <<< "$imports"
+    if [ "$crypto_count" -ne 1 ]; then
+        echo "Expected one dynamic $expected_crypto import, found $crypto_count" >&2
         exit 1
     fi
 fi

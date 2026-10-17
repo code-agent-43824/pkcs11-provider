@@ -46,12 +46,19 @@ pkcs11_provider_map = meson.current_source_dir() / 'provider.map'
 pkcs11_provider_ldflags = cc.get_supported_link_arguments([
   '-Wl,--version-script,' + pkcs11_provider_map
 ])
+pkcs11_provider_pthread = pthread_dep
+if host_machine.system() == 'windows' and get_option('buildtype') == 'release'
+  pkcs11_provider_pthread = cc.find_library('winpthread', static: true)
+  if cc.get_id() == 'gcc'
+    pkcs11_provider_ldflags += ['-static-libgcc']
+  endif
+endif
 
 pkcs11_provider = shared_module(
   'pkcs11',
   pkcs11_provider_sources,
   name_prefix: '',
-  dependencies: [libcrypto, dl_dep, pthread_dep],
+  dependencies: [libcrypto, dl_dep, pkcs11_provider_pthread],
   include_directories: [configinc],
   link_depends: [pkcs11_provider_map],
   link_args: pkcs11_provider_ldflags,

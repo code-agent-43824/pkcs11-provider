@@ -24,6 +24,13 @@ fi
 
 module_path="$build_dir/src/$module"
 test -s "$module_path"
+build_type=$(meson introspect --buildoptions "$build_dir" | python3 -c '
+import json
+import sys
+print(next(option["value"] for option in json.load(sys.stdin)
+           if option["name"] == "buildtype"))
+')
+test "$build_type" = release
 mkdir -p "$output_dir"
 output_dir=$(cd "$output_dir" && pwd)
 
@@ -47,12 +54,17 @@ fi
 cp src/pkcs11.h "$package_dir/include/"
 cp COPYING "$package_dir/"
 cp -R LICENSES "$package_dir/"
+if [ "$module" = pkcs11.dll ]; then
+    winpthreads_license="${MINGW_PREFIX:?}/share/licenses/winpthreads/COPYING"
+    test -s "$winpthreads_license"
+    cp "$winpthreads_license" "$package_dir/LICENSES/winpthreads-COPYING"
+fi
 
 cat > "$package_dir/BUILD-INFO.txt" <<EOF
 Git commit: $git_commit
 Target: $target
 OpenSSL: $(openssl version -v)
-Build type: debug, unstripped
+Build type: $build_type
 EOF
 
 if [ -n "${MSYS2_OPENSSL_PACKAGE:-}" ]; then
@@ -81,9 +93,10 @@ cat > "$package_dir/README.md" <<'EOF'
 
 Версия OpenSSL сборочного агента указана в `BUILD-INFO.txt`. Бинарный модуль
 зависит от совместимой библиотеки OpenSSL и драйвера PKCS #11 на целевой машине.
-Windows DLL OpenSSL в архив не входят: установите OpenSSL 3 для той же
-архитектуры и среды MSYS2 (UCRT64 x86_64, MINGW32 x86 или CLANGARM64 ARM64)
-и сделайте его DLL и необходимые runtime DLL доступными приложению.
+Windows DLL OpenSSL в архив не входят: предоставьте приложению OpenSSL 3
+для той же архитектуры и среды MSYS2 (UCRT64 x86_64, MINGW32 x86 или
+CLANGARM64 ARM64). MinGW pthread и GCC runtime связаны статически в модуле;
+для них не требуются отдельные DLL. Лицензия winpthreads включена в архив.
 На macOS модуль собран с готовым OpenSSL 3 из conda-forge; библиотеки OpenSSL
 не входят в архив. Для запуска предоставьте совместимые `libcrypto.3.dylib`
 и, если приложению нужен TLS, `libssl.3.dylib` той же архитектуры через
