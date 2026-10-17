@@ -1,5 +1,19 @@
 # Рабочий журнал
 
+## 2026-10-17 — действия GitHub Actions на Node 24
+
+План: по запросу владельца убрать предупреждение Node 20 с GitHub runners.
+Проверить аннотации последнего dev-релиза, обновить только затронутые
+действия и проверить полный новый run и опубликованные архивы.
+
+Наблюдение: предупреждения создают `actions/cache/restore@v4` в Windows
+jobs и `actions/download-artifact@v4` в publish job. В `action.yml`
+`actions/cache/restore@v6` и `actions/download-artifact@v7` используют
+Node 24. Текущий workflow использует также `actions/cache/save@v4`;
+обновить обе половины кэша вместе.
+
+Дальше: заменить версии и проверить полный релизный workflow.
+
 ## 2026-10-17 — размещение PKCS #11 структур на Windows
 
 План: проверить замечание владельца о Windows ABI в `src/pkcs11.h`,

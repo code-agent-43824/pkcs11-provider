@@ -1,5 +1,21 @@
 # Журнал выводов
 
+## 2026-10-17 — источник предупреждения Node 20
+
+Гипотеза: предупреждение возникает из-за стороннего действия CI, а не
+из-за кода C или версии Node в проекте.
+
+Проверка: аннотации dev-release run № 24 называют
+`actions/cache/restore@v4` в трёх Windows jobs и
+`actions/download-artifact@v4` в publish job. `actions/cache/save@v4`
+может создавать ту же аннотацию при промахе кэша. Проверены `action.yml`
+новых major: `actions/cache/restore@v6` и
+`actions/download-artifact@v7` используют `node24`; README
+download-artifact@v7 сохраняет входы `pattern` и `merge-multiple`.
+
+Промежуточный вывод: обновление этих версий устраняет причину Node 20
+аннотаций; предупреждение MSYS2 MINGW32 имеет другую причину.
+
 ## 2026-10-17 — гипотеза об упаковке PKCS #11 на Windows
 
 Гипотеза: падение при использовании Windows PKCS #11-модуля может объясняться
