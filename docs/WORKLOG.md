@@ -12,7 +12,11 @@ jobs и `actions/download-artifact@v4` в publish job. В `action.yml`
 Node 24. Текущий workflow использует также `actions/cache/save@v4`;
 обновить обе половины кэша вместе.
 
-Дальше: заменить версии и проверить полный релизный workflow.
+Сделано: `actions/cache/restore` и `actions/cache/save` переведены на v6,
+`actions/download-artifact` — на v7. Входы кэша, шаблон загрузки артефактов,
+матрица и упаковка не менялись. `actionlint` проверил workflow.
+
+Дальше: проверить полный релизный workflow, контрольные суммы и аннотации.
 
 ## 2026-10-17 — размещение PKCS #11 структур на Windows
 

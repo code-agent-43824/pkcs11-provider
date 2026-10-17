@@ -1,7 +1,6 @@
 # Передача работы
 
-В работе: обновить действия `actions/cache/restore`, `actions/cache/save`
-и `actions/download-artifact` до версий на Node 24.
-Следующий шаг: заменить версии в dev-release workflow и проверить новый
-GitHub Actions run, опубликованные архивы и аннотации.
+В работе: проверить новые версии действий на Node 24 в dev-release workflow.
+Следующий шаг: проверить GitHub Actions run, опубликованные архивы,
+контрольные суммы и отсутствие аннотаций Node 20.
 Текущий статус в `docs/STATUS.md`.
