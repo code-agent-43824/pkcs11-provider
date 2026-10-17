@@ -50,9 +50,13 @@ if cc.get_id() == 'msvc'
   if openssl_root == ''
     error('MSVC requires -Dopenssl_root pointing to an OpenSSL DLL archive')
   endif
+  openssl_libdir = openssl_root / 'lib'
+  if get_option('buildtype') == 'debug'
+    openssl_libdir = openssl_root / 'debug' / 'lib'
+  endif
   libcrypto = declare_dependency(
     include_directories: include_directories(openssl_root / 'include'),
-    link_args: [openssl_root / 'lib' / 'libcrypto.lib'],
+    link_args: [openssl_libdir / 'libcrypto.lib'],
   )
   provider_path = openssl_root / 'lib' / 'ossl-modules'
 else

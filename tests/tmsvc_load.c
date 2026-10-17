@@ -14,6 +14,10 @@ static int print_error(const char *text, size_t size, void *unused)
 
 int main(void)
 {
+    /* Initialization accepts a path; this direct loader check never opens it. */
+    if (_putenv_s("PKCS11_PROVIDER_MODULE", "unused-by-provider-load.dll") != 0) {
+        return 4;
+    }
     OSSL_PROVIDER *provider = OSSL_PROVIDER_load(NULL, "pkcs11");
     if (provider == NULL) {
         ERR_print_errors_cb(print_error, NULL);
