@@ -1328,7 +1328,7 @@ static struct p11prov_cfg_names {
     { "pkcs11-max-pin-length" },
 };
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_MSC_VER)
 __declspec(dllexport)
 #endif
 int OSSL_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL_DISPATCH *in,
